@@ -38,7 +38,7 @@ document.getElementById('pencil').addEventListener("click", function() {
 
 function draw(writeLayer) {
     let controlP;
-    writeLayer.onmousedown = startDrawing;
+    writeLayer.ontouchstart = startDrawing;
 
     function startDrawing(event) {
         if (userModesDrawer[0] && event.currentTarget === writeLayer) {
@@ -130,15 +130,18 @@ function draw(writeLayer) {
                 context.lineWidth = sliderPencilsize.valueAsNumber;
                 context.strokeStyle = pencilColor; 
                 context.globalCompositeOperation = 'source-over';
-                context.moveTo((event.clientX - rect.left)/pdfState.zoom, (event.clientY - rect.top)/pdfState.zoom);
+                let clientXReplace = (event.targetTouches[0] ? event.targetTouches[0].pageX : event.changedTouches[event.changedTouches.length-1].pageX);
+                let clientYReplace = (event.targetTouches[0] ? event.targetTouches[0].pageY : event.changedTouches[event.changedTouches.length-1].pageY);
+                context.moveTo((clientXReplace - rect.left)/pdfState.zoom, (clientYReplace - rect.top)/pdfState.zoom);
 
                 if (typeof controlP.elementToControl.paths[controlP.elementToControl.currentPathIndex] == 'undefined')
                     controlP.elementToControl.paths[controlP.elementToControl.currentPathIndex] = [];
                 
-                controlP.elementToControl.paths[controlP.elementToControl.currentPathIndex].push({x:((event.clientX - rect.left)/pdfState.zoom), y:((event.clientY - rect.top)/pdfState.zoom), line:sliderPencilsize.valueAsNumber, color:pencilColor, compositeOp:'source-over'});
-                writeLayer.onmouseup = stopDrawing;
-                writeLayer.onmousemove = drawing;
+                controlP.elementToControl.paths[controlP.elementToControl.currentPathIndex].push({x:((clientXReplace - rect.left)/pdfState.zoom), y:((clientYReplace - rect.top)/pdfState.zoom), line:sliderPencilsize.valueAsNumber, color:pencilColor, compositeOp:'source-over'});
+                writeLayer.ontouchend = stopDrawing;
+                writeLayer.ontouchmove = drawing;
             }
+            event.preventDefault();
         }
     }
 
@@ -147,23 +150,27 @@ function draw(writeLayer) {
             if (!isDrawing) return; 
             let context = controlP.editImg.getContext("2d");
             let rect = controlP.editImg.getBoundingClientRect(); 
-            context.lineTo((event.clientX - rect.left)/pdfState.zoom, (event.clientY - rect.top)/pdfState.zoom);
+            let clientXReplace = (event.targetTouches[0] ? event.targetTouches[0].pageX : event.changedTouches[event.changedTouches.length-1].pageX);
+            let clientYReplace = (event.targetTouches[0] ? event.targetTouches[0].pageY : event.changedTouches[event.changedTouches.length-1].pageY);
+            context.lineTo((clientXReplace - rect.left)/pdfState.zoom, (clientYReplace - rect.top)/pdfState.zoom);
             context.stroke();
-            controlP.elementToControl.paths[controlP.elementToControl.currentPathIndex].push({x:((event.clientX - rect.left)/pdfState.zoom), y:((event.clientY - rect.top)/pdfState.zoom), line:sliderPencilsize.valueAsNumber, color:pencilColor, compositeOp:'source-over'});     
+            controlP.elementToControl.paths[controlP.elementToControl.currentPathIndex].push({x:((clientXReplace - rect.left)/pdfState.zoom), y:((clientYReplace - rect.top)/pdfState.zoom), line:sliderPencilsize.valueAsNumber, color:pencilColor, compositeOp:'source-over'});     
+            event.preventDefault();
         }
     }
 
-    function stopDrawing(event) {
+    function stopDrawing(e) {
         if (userModesDrawer[0]) {
             isDrawing = false;
             let context = controlP.editImg.getContext("2d");
             context.restore();
             controlP.elementToControl.currentPathIndex += 1;
-            if (event.currentTarget === writeLayer) {
-                writeLayer.onmouseup = null;
-                writeLayer.onmousemove = null;
+            if (e.currentTarget === writeLayer) {
+                writeLayer.ontouchend = null;
+                writeLayer.ontouchmove = null;
                 writeLayer.style.cursor = "default";
             }
+            e.preventDefault();
         }
     }
 }
@@ -198,7 +205,9 @@ function createUserDrawLayer(e, editImgClass, thisPage, writeLayer) {
     controlP.editImg = canvasContainer;
     
     let rect = writeLayer.getBoundingClientRect();
-    let mousePos = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+    let clientXReplace = (e.targetTouches[0] ? e.targetTouches[0].pageX : e.changedTouches[e.changedTouches.length-1].pageX);
+    let clientYReplace = (e.targetTouches[0] ? e.targetTouches[0].pageY : e.changedTouches[e.changedTouches.length-1].pageY);
+    let mousePos = { x: clientXReplace - rect.left, y: clientYReplace - rect.top };
     controlP.x = mousePos.x;
     controlP.y = mousePos.y;
     controlP.type = "drawing";
@@ -276,7 +285,7 @@ document.getElementById('eraser').addEventListener("click", function() {
 
 function erase(writeLayer) {
     let controlP;
-    writeLayer.onmousedown = startErasing;
+    writeLayer.ontouchstart = startErasing;
 
     function startErasing(event) {
         if (userModesDrawer[1] && event.currentTarget === writeLayer) {
@@ -357,15 +366,18 @@ function erase(writeLayer) {
                 context.lineWidth = sliderPencilsize.valueAsNumber;
                 context.strokeStyle = eraserColor; 
                 context.globalCompositeOperation = 'destination-out';    
-                context.moveTo((event.clientX - rect.left)/pdfState.zoom, (event.clientY - rect.top)/pdfState.zoom);
+                let clientXReplace = (event.targetTouches[0] ? event.targetTouches[0].pageX : event.changedTouches[event.changedTouches.length-1].pageX);
+                let clientYReplace = (event.targetTouches[0] ? event.targetTouches[0].pageY : event.changedTouches[event.changedTouches.length-1].pageY);
+                context.moveTo((clientXReplace - rect.left)/pdfState.zoom, (clientYReplace - rect.top)/pdfState.zoom);
                 
                 if (typeof controlP.elementToControl.paths[controlP.elementToControl.currentPathIndex] == 'undefined')
                     controlP.elementToControl.paths[controlP.elementToControl.currentPathIndex] = [];
                 
                 controlP.elementToControl.paths[controlP.elementToControl.currentPathIndex].push({x:((event.clientX - rect.left)/pdfState.zoom), y:((event.clientY - rect.top)/pdfState.zoom), line:sliderPencilsize.valueAsNumber, color:eraserColor, compositeOp:'destination-out'});
-                writeLayer.onmouseup = stopErasing;
-                writeLayer.onmousemove = erasing;
+                writeLayer.ontouchend = stopErasing;
+                writeLayer.ontouchmove = erasing;
             }
+            event.preventDefault();
         }
     }
 
@@ -374,9 +386,12 @@ function erase(writeLayer) {
             if (!isErasing) return; 
             let context = controlP.editImg.getContext("2d");
             let rect = controlP.editImg.getBoundingClientRect(); 
-            context.lineTo((event.clientX - rect.left)/pdfState.zoom, (event.clientY - rect.top)/pdfState.zoom);
+            let clientXReplace = (event.targetTouches[0] ? event.targetTouches[0].pageX : event.changedTouches[event.changedTouches.length-1].pageX);
+            let clientYReplace = (event.targetTouches[0] ? event.targetTouches[0].pageY : event.changedTouches[event.changedTouches.length-1].pageY);
+            context.lineTo((clientXReplace - rect.left)/pdfState.zoom, (clientYReplace - rect.top)/pdfState.zoom);
             context.stroke();
-            controlP.elementToControl.paths[controlP.elementToControl.currentPathIndex].push({x:((event.clientX - rect.left)/pdfState.zoom), y:((event.clientY - rect.top)/pdfState.zoom), line:sliderPencilsize.valueAsNumber, color:eraserColor, compositeOp:'destination-out'});       
+            controlP.elementToControl.paths[controlP.elementToControl.currentPathIndex].push({x:((clientXReplace - rect.left)/pdfState.zoom), y:((clientYReplace - rect.top)/pdfState.zoom), line:sliderPencilsize.valueAsNumber, color:eraserColor, compositeOp:'destination-out'});       
+            event.preventDefault();
         }
     }
 
@@ -387,11 +402,11 @@ function erase(writeLayer) {
             context.restore();
             controlP.elementToControl.currentPathIndex += 1;
             if (event.currentTarget === writeLayer) {
-                writeLayer.onmouseup = null;
-                writeLayer.onmousemove = null;
+                writeLayer.ontouchend = null;
+                writeLayer.ontouchmove = null;
                 writeLayer.style.cursor = "default";
             }
-
+            event.preventDefault();
         }
     }
 }
@@ -477,7 +492,7 @@ function moveDrawing(controlP) {
     clicked = false;
     short = false;
     controlP.controlBox.onclick = detectClick;
-    controlP.controlBox.onmousedown = startMovingDrawing;  
+    controlP.controlBox.ontouchstart = startMovingDrawing;  
     
     function detectClick() {
         if (userModesDrawer[3]) {
@@ -494,29 +509,37 @@ function moveDrawing(controlP) {
         if (userModesDrawer[3] && !clicked) {
             mouseIsDown = true;
             markSingleLayerOnEdit(controlP);
-            x = controlP.controlBox.offsetLeft - e.clientX;
-            y = controlP.controlBox.offsetTop - e.clientY;
-            startX = e.clientX - rect.left;
-            startY = e.clientY - rect.top;
-            controlP.controlBox.onmouseup = stopMovingDrawing;
-            controlP.controlBox.onmousemove = movingDrawing;
+            let clientXReplace = (e.targetTouches[0] ? e.targetTouches[0].pageX : e.changedTouches[e.changedTouches.length-1].pageX);
+            let clientYReplace = (e.targetTouches[0] ? e.targetTouches[0].pageY : e.changedTouches[e.changedTouches.length-1].pageY);
+            x = controlP.controlBox.offsetLeft - clientXReplace;
+            y = controlP.controlBox.offsetTop - clientYReplace;
+            startX = clientXReplace - rect.left;
+            startY = clientYReplace - rect.top;
+            controlP.controlBox.ontouchend = stopMovingDrawing;
+            controlP.controlBox.ontouchmove = movingDrawing;
+            e.preventDefault();
         }
     }
 
     function movingDrawing(e) {
         if (userModesDrawer[3] && mouseIsDown && !clicked) { 
-            controlP.controlBox.style.left = (e.clientX + x) + "px";
-            controlP.controlBox.style.top = (e.clientY + y) + "px"; 
-            controlP.x = (e.clientX + x) / pdfState.zoom;
-            controlP.y = (e.clientY + y) / pdfState.zoom;
+            let clientXReplace = (e.targetTouches[0] ? e.targetTouches[0].pageX : e.changedTouches[e.changedTouches.length-1].pageX);
+            let clientYReplace = (e.targetTouches[0] ? e.targetTouches[0].pageY : e.changedTouches[e.changedTouches.length-1].pageY);
+            controlP.controlBox.style.left = (clientXReplace + x) + "px";
+            controlP.controlBox.style.top = (clientYReplace + y) + "px"; 
+            controlP.x = (clientXReplace + x) / pdfState.zoom;
+            controlP.y = (clientYReplace + y) / pdfState.zoom;
+            e.preventDefault();
         }
     }
 
     function stopMovingDrawing(e) {
         if (userModesDrawer[3] && !clicked && !short) {
             mouseIsDown = false;
-            endX = e.clientX - rect.left;
-            endY = e.clientY - rect.top;
+            let clientXReplace = (e.targetTouches[0] ? e.targetTouches[0].pageX : e.changedTouches[e.changedTouches.length-1].pageX);
+            let clientYReplace = (e.targetTouches[0] ? e.targetTouches[0].pageY : e.changedTouches[e.changedTouches.length-1].pageY);
+            endX = clientXReplace - rect.left;
+            endY = clientYReplace - rect.top;
             let deltaX = endX - startX;
             let deltaY = endY - startY;
             const writeLayers = document.getElementsByClassName("write_layer");
@@ -541,9 +564,10 @@ function moveDrawing(controlP) {
             }
             zoomDrawing(controlP, pdfState.zoom, pdfState.zoom);
             rotateDrawing(controlP, controlP.elementToControl.rotation);   
-            controlP.controlBox.onmouseup = null;
-            controlP.controlBox.onmousemove = null;
+            controlP.controlBox.ontouchend = null;
+            controlP.controlBox.ontouchmove = null;
             controlP.controlBox.onclick = null;
+            e.preventDefault();
         }
     }
 }
