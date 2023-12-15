@@ -1,6 +1,7 @@
 let pdfState = {
     pdf: null,
     currentPage: 1,
+    lastPage: 1,
     zoom: 1,
     originalPDFBytes: null,
     existingPDFBytes: null,
@@ -56,6 +57,7 @@ for (let i = 0; i < inputFileButtons.length; i++) {
                 await kickOff(pdf);
                 document.getElementById('maxPDFPages').innerHTML = pdf._pdfInfo.numPages + " pages";
                 restrictInputValues('current_page', 1, pdf._pdfInfo.numPages, false, false);
+                pdfState.lastPage = pdf._pdfInfo.numPages;
                 updateCursorX();
                 updateCursorY();
             });
@@ -498,19 +500,34 @@ function dragElement(elmnt) {
     let pos2 = 0;
     let pos3 = 0;
     let pos4 = 0;
-    let currentPage = document.getElementById("current_page").value;
-    currentPage = parseInt(currentPage);
-    const writeLayers = document.getElementsByClassName("write_layer");
     let currentWriteLayer;
-    for (let i = 0; i < writeLayers.length; i++) {
-        if (parseInt(writeLayers[i].getAttribute("data-write")) === currentPage) {
-            currentWriteLayer = writeLayers[i];
-        }
-    }
     clicked = false;
     short = false;
-    currentWriteLayer.onclick = detectClick;
-    currentWriteLayer.onmousedown = dragMouseDown;
+    let triggerCurrentPage = false;
+    let currentPage = document.getElementById("current_page").value;
+    while (currentPage.search(" ") > -1) {
+        currentPage = currentPage.replace(" ", "");
+    }
+    if (!isNaN(currentPage)) {
+        if (Number.isInteger) {
+            currentPage = parseInt(currentPage);
+            triggerCurrentPage = true;
+        } else {
+            triggerCurrentPage = false;
+        }
+    } else {
+        triggerCurrentPage = false;
+    }
+    if (triggerCurrentPage && currentPage >= 1 && currentPage <= pdfState.lastPage) {
+        const writeLayers = document.getElementsByClassName("write_layer");
+        for (let i = 0; i < writeLayers.length; i++) {
+            if (parseInt(writeLayers[i].getAttribute("data-write")) === currentPage) {
+                currentWriteLayer = writeLayers[i];
+            }
+        }
+        currentWriteLayer.onclick = detectClick;
+        currentWriteLayer.onmousedown = dragMouseDown;
+    }
 
     function detectClick() {
         if (draggingMode) {
