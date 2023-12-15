@@ -205,7 +205,7 @@ function moveLayer(target) {
         i.ontouchmove = e => {
             e.preventDefault();
         };
-        i.ontouchend = e => {
+        i.ontouchleave = e => {
             if (i != current) {
                 let currentpos = 0, droppedpos = 0;
                 for (let it=0; it<items.length; it++) {
