@@ -1,0 +1,353 @@
+.reader_controls_editor {
+    background: #333;
+    display: none;
+    justify-content: center;
+    width: 100%;
+    height: 58px;
+    top: 58px;
+    position: absolute;
+    z-index: 10;
+}
+
+#writer_controls, #drawer_controls, #geometry_controls, #images_controls {
+    background: #8c8c8c;
+    display: none;
+    width: 100%;
+    height: 58px;
+    position: absolute;
+    top: 116px;
+    z-index: 30;
+}
+
+#show_btns {
+    display: none;
+}
+
+.button_layout_layers {
+    margin: 3px;
+    cursor: pointer;
+    height: 38px;
+    position: relative;
+}
+
+.pos_pdfviewercon_editor {
+    margin-top: 175px;
+}
+
+div.text {
+    width: 40px;
+    height: 40px;
+    border-style: solid;
+    border-width: 2px;
+    border-color:brown;
+    z-index: 20;
+}
+
+div.shape {
+    width: 40px;
+    height: 40px;
+    border-style: solid;
+    border-width: 2px;
+    border-color:rgb(255, 155, 93);
+    z-index: 20;
+}
+
+div.image {
+    width: 40px;
+    height: 40px;
+    border-style: solid;
+    border-width: 2px;
+    border-color:rgb(93, 152, 255);
+    z-index: 20;
+}
+
+div.drawing {
+    width: 40px;
+    height: 40px;
+    border-style: solid;
+    border-width: 2px;
+    border-color:rgb(223, 93, 255);
+    z-index: 20;
+}
+
+.write_layer {
+    overflow: hidden;
+    display: block;
+    position: relative;
+}
+
+.top_editor {
+    position: relative;
+    top: 174px;
+    width: 100%;
+    padding-bottom: 60px;
+}
+
+#editor_controls, #pencil_controls, #shape_controls, #img_controls {
+    display: none;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    width: 100%;
+    position: relative;
+    top: 0;
+    padding-top: 20px;
+}
+
+.borderless {
+    border-style: solid;
+    border-color: rgba(0, 0, 0, 1);
+    border-width: 5px;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+}
+
+.sidemenu_margins {
+    margin: 5px;
+}
+
+#applytext_con {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+#applytextarea {
+    width: 140px;
+    height: 500px;
+    max-height: 3000px;
+    background-color: rgba(255, 255, 255, 1.0);
+}
+
+.edittextbtn_style {
+    padding-left: 20px;
+    padding-right: 20px;
+    height: 38px;
+    border: 3px solid #333;
+    border-radius: 5px;
+    background-color: rgba(255, 255, 255, 1.0);
+    color: rgba(0, 0, 0, 1.0);
+}
+
+#fontsel {
+    appearance: none;
+    font-size: smaller;
+}
+
+.edittextctls { 
+    appearance: none;
+    width: 150px;
+    font-size: smaller;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 20px;
+}
+
+.scale_column {
+    display: flex;
+    flex-direction: row;
+}
+
+.img_column {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding-left: 25px;
+}
+
+.font_column {
+    padding-bottom: 50px;
+}
+
+.listpoint_con {
+    padding: 15px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.div_files {
+    display: flex;
+    flex-direction: row;
+}
+
+#sidemenu {
+    display: none;
+    z-index: 25;
+}
+
+.sidemenupos {
+    position: fixed;
+    top: 174px;
+    bottom: 0;
+    right: 0;
+    overflow-y: scroll;
+    overflow-x: hidden;
+    display: flex;
+    background-color: rgba(94, 184, 115, 0.8);
+}
+
+.sidemenu_sel {
+    background-color: rgb(0, 0, 0, 1.0);
+    color: white;
+}
+
+.numinput_sidemenu {
+    background-color: rgba(255, 255, 255, 1.0);
+    width: 50px;
+}
+
+.rangeinput_sidemenu {
+    width: 100px;
+}
+
+#layer_stack {
+    display: none;
+    flex-direction: column;
+    background-color: rgba(218, 189, 182, 0.8);
+    position: fixed;
+    top: 174px;
+    bottom: 0;
+    left: 10px;
+    width: 180px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    z-index: 25;
+    float: left;
+}
+
+#layer_stack_btns {
+    position: fixed;
+    z-index: 10;
+    width: 180px;
+    background-color: rgba(218, 189, 182, 0.8);
+}
+
+#layer_stack_con {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    top: 50px;
+    width: 180px;
+    height: 100%;
+    z-index: 5;
+}
+
+#layerstack_label {
+    display: flex;
+    padding-left: 10px;
+}
+
+.flexrow {
+    display: flex;
+    flex-direction: row;
+}
+
+.layerlabel {
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: rgba(218, 189, 182, 0.8);
+    padding: 10px;
+    margin-bottom: 20px;
+}
+
+.layercontainer {
+    display: flex;
+    flex-direction: row;
+    border-color:rgba(0, 0, 0, 0.8);
+    background-color: rgba(0, 0, 0, 0.8);
+    padding: 10px 0 10px 10px;
+    height: 100%;
+}
+
+.layercheckbox {
+    display: flex;
+    box-sizing: border-box;
+}
+
+.layername {
+    display: flex;
+    background-color: rgba(140, 140, 140, 0.8);
+    border: none;
+    overflow: hidden;
+    width: 100%;
+    margin-left: 20px;
+}
+
+input[type="checkbox"] {
+    appearance: none;
+    height: 25px;
+    width: 25px;
+    background-color: rgba(218, 189, 182, 0.8);
+    border: 2px solid rgba(0, 0, 0, 0.8);
+    border-radius: 4px;
+    outline: none;
+    transition-duration: 0.3s;
+}
+
+input[type="checkbox"]:checked {
+    appearance: none;
+    height: 25px;
+    width: 25px;
+    border: 2px solid rgba(140, 140, 140, 0.8);
+    background-color: rgba(94, 184, 115, 0.8);
+}
+
+#selectall, #deselectall {
+    width: 120px;
+}
+
+.selall_hover_disabled, .deselall_hover_disabled, .selall_hover, .deselall_hover {
+    display: none;
+    background-color: #000000;
+    color: #FFFFFF;
+    position: relative;
+    top: -50px;
+    left: 120px;
+    padding: 10px;
+    z-index: 30;
+    width: 310px;
+    height: 220px;
+}
+
+#selectall:hover + .selall_hover, #deselectall:hover + .deselall_hover {
+    display: flex;
+    flex-direction: row;
+}
+
+.selall_hover:hover, .deselall_hover:hover {
+    display: flex;
+    flex-direction: row;
+}
+
+.pagelist, .un_pagelist {
+    width: 200px;
+    height: 30px;
+}
+
+.flex-size {
+    width: 80px;
+}
+
+.flexcol {
+    display: flex;
+    flex-direction: column;
+}
+
+.flexrow {
+    display: flex;
+    flex-direction: row;
+}
+
+.save_hover_editor {
+    position: absolute;
+    top: 0;
+    left: 68px;
+}

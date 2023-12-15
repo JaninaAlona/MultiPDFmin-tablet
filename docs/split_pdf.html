@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="Author" content="Janina Schroeder">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>MultiPDFmin - Javascript PDF Editor</title>
+    <link rel="stylesheet" type="text/css" href="css/index_reader_style.css">
+    <link rel="stylesheet" type="text/css" href="css/widget_style.css">
+    <link rel="stylesheet" type="text/css" href="libs/bootstrap.min.css">
+    <script src="libs/pdf-lib.min.js"></script>
+
+    <!--filestyle dependency-->
+    <script src="libs/jquery-3.6.0.min.js"></script>
+    <script src="libs/vue.global.js"></script>
+    <script src="libs/download.min.js"></script>
+
+</head>
+
+
+<body>
+    <header id="buttons">
+        <div id="start_menu" class="dir_row_left">
+            <a href="index.html" id="open_pdf" class="btn btn-success button_layout">Read</a>
+            <a href="create_blank_pdf.html" id="create_pdf" class="btn btn-success button_layout">Create</a>
+            <a href="split_pdf.html" id="split" class="btn btn-outline-success button_layout">Split</a>
+            <a href="merge_pdf.html" id="merge" class="btn btn-success button_layout">Merge</a>
+            <a href="edit_pdf.html" class="btn btn-success button_layout writepdf">Text</a>
+            <a href="edit_pdf.html" class="btn btn-success button_layout drawpdf">Draw</a>
+            <a href="edit_pdf.html" class="btn btn-success button_layout geometry">Shape</a>
+            <a href="edit_pdf.html" class="btn btn-success button_layout images">Image</a>
+        </div>
+    </header>
+    <div id="split_app">
+        <div class="pdf_widget split_widget">
+            <div id="split_pop_up" class="pop_up">
+                <fieldset>
+                    <div class="pop_bottom_pad">
+                        <input @input="selectFile" type="file" id="inputsplitfile" class="filestyle" data-btnClass="btn-success" data-input="false" accept=".pdf">
+                        <div><p id="fileselected"></p></div>
+                        <label for="split_after" class="space_btw_radio">Split after</label>
+                        <select id="split_after" class="btn btn-success" name="after" disabled>
+                            <option @click="selectRegularSplit(0)" id="none_sel" selected>none</option>
+                            <option @click="selectRegularSplit(1)" id="every_p">every page</option>
+                            <option @click="selectRegularSplit(2)" id="odd_p">odd pages</option>
+                            <option @click="selectRegularSplit(3)" id="even_p">even pages</option>
+                            <option @click="selectRegularSplit(4)" id="n_p">single page</option>
+                            <option @click="selectRegularSplit(5)" id="list_p">list of pages</option>
+                        </select>
+                    </div>                        
+                    <div>
+                        <label for="n_page_slider" class="space_btw_radio">Split after page {{ afterNPages }}</label>
+                        <input @input="updateSlider" type="range" class="split_slider" id="n_page_slider" min="1" :max="maxPages-1" value="1" disabled>
+                    </div>
+                    <div>
+                        <label for="splitlist">List of split pages comma seperated</label>
+                    </div>
+                    <div>
+                        <input type="text" id="splitlist" disabled>
+                    </div>
+                    <div class="pop_elem_size">
+                        <button @click="saveSplittedPDFs" id="save_split" class="btn btn-success space_btw_radio" disabled type="button">Save</button>
+                        <div class="filename_hover">
+                            <label for="split_filename">Provide PDF Filename:</label>
+                            <input @input="setFilename" id="split_filename" type="text" />
+                        </div> 
+                    </div>
+                </fieldset>
+            </div>
+        </div>
+    </div>
+    <script src="libs/bootstrap-filestyle.min.js"></script>
+    <script src="libs/bootstrap.min.js"></script>
+    <script src="js/split_pdf_script.js"></script>
+</body>
+
+</html>

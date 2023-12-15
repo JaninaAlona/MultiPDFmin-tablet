@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="Author" content="Janina Schroeder">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>MultiPDFmin - Javascript PDF Editor</title>
+    <link rel="stylesheet" type="text/css" href="css/editor_style.css">
+    <link rel="stylesheet" type="text/css" href="css/index_reader_style.css">
+    <link rel="stylesheet" type="text/css" href="libs/bootstrap.min.css">
+
+    <!-- Color Picker -->
+    <!-- https://www.cssscript.com/color-picker-talwin/ -->
+    <link rel="stylesheet" type="text/css" href="libs/alwan.min.css">
+    <script src="libs/alwan.min.js"></script>
+    <script src="libs/pdf-lib.min.js"></script>
+    
+    <!--PDF-lib dependency-->
+    <script src="libs/fontkit.umd.min.js"></script>
+
+    <!--filestyle dependency-->
+    <script src="libs/jquery-3.6.0.min.js"></script>
+    <script src="libs/vue.global.js"></script>
+    <script src="libs/download.min.js"></script>
+    <script src="libs/pdf.min.js"></script>
+
+    <!--PDF.js dependency-->
+    <script src="libs/pdf.worker.min.js"></script>
+</head>
+
+<body>
+    <header id="buttons">
+        <div id="start_menu" class="dir_row_left">
+            <a href="index.html" class="btn btn-success button_layout open_pdf">Read</a>
+            <a href="create_blank_pdf.html" id="create_pdf" class="btn btn-success button_layout">Create</a>
+            <a href="split_pdf.html" id="split" class="btn btn-success button_layout">Split</a>
+            <a href="merge_pdf.html" id="merge" class="btn btn-success button_layout">Merge</a>
+            <a href="edit_pdf.html" id="writepdfbtn" class="btn btn-outline-success button_layout writepdf">Text</a>
+            <a href="edit_pdf.html" id="drawpdfbtn" class="btn btn-success button_layout drawpdf">Draw</a>
+            <a href="edit_pdf.html" id="geometrybtn" class="btn btn-success button_layout geometry">Shape</a>
+            <a href="edit_pdf.html" id="imagesbtn" class="btn btn-success button_layout images">Image</a>
+        </div>
+        <div id="reader_controls" class="reader_controls_editor">
+            <div class="dir_col">
+                <div class="dir_row">
+                    <button id="go_previous" class="btn btn-success button_layout" type="button">Previous</button>
+                    <div class="input_layout"><input id="current_page" class="button_layout" value="1" type="text"></div>
+                    <div id="maxPDFPages"></div>
+                    <button id="go_next" class="btn btn-success button_layout" type="button">Next</button>
+                    <button id="zoom_in" class="btn btn-success zoom button_layout" type="button">+</button>
+                    <div class="input_layout"><input id="zoom_factor" class="button_layout" value="100%" type="text"></div>
+                    <button id="zoom_out" class="btn btn-success zoom button_layout" type="button">-</button>
+                    <button id="dragpdf" class="btn btn-success button_layout" type="button">Drag</button>
+                </div>
+            </div>
+        </div>
+        <input type="file" class="filestyle inputfile display_edit_ctls" data-btnClass="btn btn-success" data-input="false" data-mode="edit_text" accept=".pdf">
+    </header>
+    <div id="viewer_bg">
+        <div class="scrollwrapper top_editor">
+            <div class="drag_con">
+                <div class="dragwrapper">
+                    <div class="pdf_viewer_con justify-center pos_pdfviewercon_editor">
+                        <div class="pdf_viewer edit_viewer justify-center"></div>
+                    </div>
+                </div>
+            </div>
+        </div> 
+    </div>
+    <div id="layer_stack">
+        <div id="layer_stack_btns">
+            <div id="layerstack_label">Layers
+                <button id="btns" class="btn btn-success button_layout_layers" type="button">Buttons</button>
+            </div>
+            <div id="show_btns">
+                <div>
+                    <button id="layer_mode" class="btn btn-light button_layout_layers" type="button">Layer Mode</button>
+                </div>
+                <div class="flexrow">
+                    <button id="box_mode" class="btn btn-success button_layout_layers" type="button">Box Mode</button>
+                    <button id="dublicatelayer" class="btn btn-dark button_layout_layers" type="button">Copy</button>
+                </div>
+                <div class="flexrow">
+                    <button id="lock" class="btn btn-dark button_layout_layers" type="button">Lock</button>
+                    <button id="unlock" class="btn btn-dark button_layout_layers" type="button">Unlock</button>
+                </div>
+                <div>
+                    <button id="selectall" class="btn btn-dark button_layout_layers" type="button">Select All</button>
+                    <div class="selall_hover_disabled">
+                        <div class="flercol">
+                            <div class="flexcol">
+                                <label for="pagelistselall">Pages comma<br> seperated:</label>
+                                <input id="pagelistselall" class="pagelist" type="text" />
+                            </div>
+                            <div class="flexrow">
+                                <div class="flexcol">
+                                    <button class="texttype btn btn-light button_layout flex-size" type="button">Text</button>
+                                    <button class="drawingtype btn btn-light button_layout flex-size" type="button">Draw</button>
+                                </div>
+                                <div class="flexcol">
+                                    <button class="shapetype btn btn-light button_layout flex-size" type="button">Shape</button>
+                                    <button class="imagetype btn btn-light button_layout flex-size" type="button">Image</button>
+                                </div>
+                                <div class="flexcol">
+                                    <button class="lockedBTN btn btn-light button_layout flex-size" type="button">Lock</button>
+                                    <button class="unlockedBTN btn btn-light button_layout flex-size" type="button">Unlock</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <button id="deselectall" class="btn btn-dark button_layout_layers" type="button">Deselect All</button>
+                    <div class="deselall_hover_disabled">
+                        <div class="flercol">
+                            <div class="flexcol">
+                                <label for="pagelistunselall">Pages comma<br> seperated:</label>
+                                <input id="pagelistunselall" class="un_pagelist" type="text" />
+                            </div>
+                            <div class="flexrow">
+                                <div class="flexcol">
+                                    <button class="un_texttype btn btn-light button_layout flex-size" type="button">Text</button>
+                                    <button class="un_drawingtype btn btn-light button_layout flex-size" type="button">Draw</button>
+                                </div>
+                                <div class="flexcol">
+                                    <button class="un_shapetype btn btn-light button_layout flex-size" type="button">Shape</button>
+                                    <button class="un_imagetype btn btn-light button_layout flex-size" type="button">Image</button>
+                                </div>
+                                <div class="flexcol">
+                                    <button class="un_lockedBTN btn btn-light button_layout flex-size" type="button">Lock</button>
+                                    <button class="un_unlockedBTN btn btn-light button_layout flex-size" type="button">Unlock</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="layer_stack_con"></div>
+    </div>
+    <!-- Writer -->
+    <div id="sidemenu" class="sidemenupos">
+        <div id="editor_controls">
+            <div class="cursor_pos_con sidemenu_margins borderless">
+                <div class="sidemenu_margins">
+                    <p class="cursor_x"></p>    
+                </div>
+                <div class="sidemenu_margins">
+                    <p class="cursor_y"></p>    
+                </div>
+            </div>
+            <div id="applytext_con" class="borderless sidemenu_margins">
+                <div class="sidemenu_margins">
+                    <textarea id="applytextarea" name="edittextarea" rows="100" cols="30">dummy</textarea>
+                </div>    
+                <div class="sidemenu_margins">
+                    <button id="applytext" class="edittextbtn_style" type="button">Text</button>
+                </div>
+            </div>
+            <div id="lineheight_con" class="borderless">
+                <div class="sidemenu_margins">
+                    <p>Text Line Height</p>
+                </div>
+                <div class="sidemenu_margins">
+                    <select name="lineheight" id="lineheightsel" class="sidemenu_sel">
+                        <option value="10" class="edittextctls">10</option>
+                        <option value="18" class="edittextctls">18</option>
+                        <option value="24" selected class="edittextctls">24</option>
+                        <option value="34" class="edittextctls">34</option>
+                        <option value="50" class="edittextctls">50</option>
+                        <option value="80" class="edittextctls">80</option>
+                        <option value="100" class="edittextctls">100</option>
+                    </select>
+                    <input type="text" id="lineheight_input" class="numinput_sidemenu">
+                </div>
+                <div class="sidemenu_margins">
+                    <button id="applylineheight" class="edittextbtn_style" type="button">Line Height</button>
+                </div>
+            </div>  
+            <div id="font_con" class="borderless">
+                <div class="sidemenu_margins">
+                    <p>Font Selection</p>
+                </div>
+                <div class="sidemenu_margins">
+                    <select name="font" id="fontsel" class="sidemenu_sel">
+                        <option value="Courier" class="edittextctls">Courier</option>
+                        <option value="Courier-Bold" class="edittextctls">CourierBold</option>
+                        <option value="Courier-Oblique" class="edittextctls">CourierOblique</option>
+                        <option value="Courier-BoldOblique" class="edittextctls">CourierBoldOblique</option>
+                        <option value="Helvetica" class="edittextctls">Helvetica</option>
+                        <option value="Helvetica-Bold" class="edittextctls">HelveticaBold</option>
+                        <option value="Helvetica-Oblique" class="edittextctls">HelveticaOblique</option>
+                        <option value="Helvetica-BoldOblique" class="edittextctls">HelveticaBoldOblique</option>
+                        <option value="Times-Roman" selected="selected" class="edittextctls selected_option">TimesRoman</option>
+                        <option value="Times-Bold" class="edittextctls">TimesRomanBold</option>
+                        <option value="Times-BoldItalic" class="edittextctls">TimesRomanBoldItalic</option>
+                        <option value="Times-Italic" class="edittextctls">TimesRomanItalic</option>
+                    </select>
+                </div>
+                <div class="sidemenu_margins">
+                    <button id="applyfont" class="edittextbtn_style" type="button">Font</button>
+                </div>
+            </div>
+            <div class="font_column borderless">
+                <div>
+                    <input type="file" id="inputfont" class="filestyle" data-btnClass="btn-success" data-input="false" accept=".ttf">
+                    <label for="inputfont">Select .ttf Font:</label>
+                </div>
+                <div>
+                    <div id="listpoint_font_con"></div>
+                </div>
+                <div>
+                    <button id="clearlist_text" class="btn btn-success button_layout" type="button">Clear</button>
+                </div>
+                <div>
+                    <button id="applycustomfont" class="edittextbtn_style" type="button">Custom Font</button>
+                </div>
+            </div>
+            <div id="fontsize_con" class="borderless">
+                <div class="sidemenu_margins">
+                    <p>Font Size</p>
+                </div>
+                <div class="sidemenu_margins">
+                    <select name="fontsize" id="fontsizesel" class="sidemenu_sel">
+                        <option value="10" class="edittextctls">10</option>
+                        <option value="30" selected class="edittextctls">30</option>
+                        <option value="50" class="edittextctls">50</option>
+                        <option value="80" class="edittextctls">80</option>
+                        <option value="100" class="edittextctls">100</option>
+                        <option value="120" class="edittextctls">120</option>
+                        <option value="150" class="edittextctls">150</option>
+                    </select>
+                    <input type="text" id="textsize_input" class="numinput_sidemenu">
+                </div>
+                <div class="sidemenu_margins">
+                    <button id="applysize" class="edittextbtn_style" type="button">Font Size</button> 
+                </div>
+            </div>  
+            <div id="fontcolor_con" class="borderless">
+                <div class="sidemenu_margins">
+                    <p>Font Color</p>
+                    <div id="colorpicker" class="colorpicker_class edittextctls"></div>
+                </div>
+                <div class="sidemenu_margins">
+                    <button id="applyfontcolor" class="edittextbtn_style" type="button">Font Color</button>  
+                </div>
+            </div>
+            <div id="rotate_con" class="borderless">
+                <div class="sidemenu_margins">
+                    <p>Rotate</p>
+                </div>
+                <div class="sidemenu_margins">
+                    <select name="rotatetext" id="rotatetextsel" class="sidemenu_sel">
+                        <option value="0" selected class="edittextctls">0</option>
+                        <option value="45" class="edittextctls">45</option>
+                        <option value="90" class="edittextctls">90</option>
+                        <option value="180" class="edittextctls">180</option>
+                        <option value="270" class="edittextctls">270</option>
+                    </select>
+                    <input type="text" id="textrotation_input" class="numinput_sidemenu">
+                </div>
+                <div class="sidemenu_margins">
+                    <button id="applytextrotation" class="edittextbtn_style" type="button">Rotation</button>
+                </div> 
+            </div>
+            <div id="clear_text_con" class="borderless">
+                <button id="cleartext" class="edittextbtn_style sidemenu_margins" type="button">Remove</button>
+            </div>
+        </div>
+        <!-- Drawer -->
+        <div id="pencil_controls">
+            <div class="cursor_pos_con sidemenu_margins borderless">
+                <div class="sidemenu_margins">
+                    <p class="cursor_x"></p>    
+                </div>
+                <div class="sidemenu_margins">
+                    <p class="cursor_y"></p>    
+                </div>
+            </div>
+            <div id="scale_draw_con" class="borderless">
+                <div class="sidemenu_margins">
+                    <div class="scale_column">
+                        <label for="scale_width_draw">Width Factor</label>
+                        <input type="text" id="scale_width_draw" class="numinput_sidemenu" value="1">
+                    </div>
+                </div>
+                <div class="sidemenu_margins">
+                    <div class="scale_column">
+                        <label for="scale_height_draw">Height Factor</label>
+                        <input type="text" id="scale_height_draw" class="numinput_sidemenu" value="1">
+                    </div>
+                </div>
+                <div class="sidemenu_margins">
+                    <button id="scaleDraw" class="edittextbtn_style" type="button">Scale</button>
+                </div>
+            </div>
+            <div id="pencilcolor_con" class="borderless">
+                <div class="sidemenu_margins">
+                    <p>Pencil Color</p>
+                    <div id="colorpicker_pencil" class="colorpicker_class edittextctls"></div>
+                </div>
+                <div class="sidemenu_margins">
+                    <button id="applypencilcolor" class="edittextbtn_style" type="button">Pencil Color</button>  
+                </div>
+            </div>
+            <div id="pencilsize_con" class="borderless">
+                <div class="sidemenu_margins">
+                    <p>Pencil/Eraser Size</p>
+                </div>
+                <div class="sidemenu_margins">
+                    <input id="pencilsize" class="rangeinput_sidemenu" type="range" min="0.5" max="50" step="0.1" value="4">
+                    <output id="pencilsize_output">4</output>
+                </div>
+                <div class="sidemenu_margins">
+                    <button id="applypencilsize" class="edittextbtn_style" type="button">Pencil Size</button>
+                </div>
+            </div>
+            <div id="rotate_draw_con" class="borderless">
+                <div class="sidemenu_margins">
+                    <p>Rotate</p>
+                </div>
+                <div class="sidemenu_margins">
+                    <select name="rotatedraw" id="rotatedrawsel" class="sidemenu_sel">
+                        <option value="0" selected class="edittextctls">0</option>
+                        <option value="45" class="edittextctls">45</option>
+                        <option value="90" class="edittextctls">90</option>
+                        <option value="180" class="edittextctls">180</option>
+                        <option value="270" class="edittextctls">270</option>
+                    </select>
+                    <input type="text" id="drawrotation_input" class="numinput_sidemenu" value="0">
+                </div>
+                <div class="sidemenu_margins">
+                    <button id="applydrawrotation" class="edittextbtn_style" type="button">Rotation</button>
+                </div> 
+            </div>
+            <div id="clear_drawing_con" class="borderless">
+                <button id="cleardrawing" class="edittextbtn_style sidemenu_margins" type="button">Remove</button>
+            </div>
+        </div>
+        <!-- Geometry -->
+        <div id="shape_controls">
+            <div class="cursor_pos_con sidemenu_margins borderless">
+                <div class="sidemenu_margins">
+                    <p class="cursor_x"></p>    
+                </div>
+                <div class="sidemenu_margins">
+                    <p class="cursor_y"></p>    
+                </div>
+            </div>
+            <div id="triangle_point_con" class="borderless">
+                <div class="sidemenu_margins">
+                    <p>Triangle's 3rd Point:</p>
+                </div>
+                <div class="sidemenu_margins">
+                    <div class="scale_column">
+                        <p>Point X</p>
+                        <input type="text" id="xp2" class="numinput_sidemenu">
+                    </div>
+                </div>
+                <div class="sidemenu_margins">
+                    <div class="scale_column">
+                        <p>Point Y</p>
+                        <input type="text" id="yp2" class="numinput_sidemenu">
+                    </div>
+                </div>
+                <div class="sidemenu_margins">
+                    <button id="tripoint" class="edittextbtn_style" type="button">Point</button>
+                </div>
+            </div>
+            <div id="scale_geometry_con" class="borderless">
+                <div class="sidemenu_margins">
+                    <div class="scale_column">
+                        <label for="scale_width">Width</label>
+                        <input type="text" id="scale_width" class="numinput_sidemenu">
+                    </div>
+                </div>
+                <div class="sidemenu_margins">
+                    <div class="scale_column">
+                        <label for="scale_height">Height</label>
+                        <input type="text" id="scale_height" class="numinput_sidemenu">
+                    </div>
+                </div>
+                <div class="sidemenu_margins">
+                    <button id="scaleShape" class="edittextbtn_style" type="button">Scale</button>
+                </div>
+            </div>
+            <div id="scale_func_geo_con" class="borderless">
+                <div class="sidemenu_margins">
+                    <p>Scale by Factor</p>
+                </div>
+                <div class="sidemenu_margins">
+                    <input id="scale_func_geo" class="rangeinput_sidemenu" type="range" min="0.1" max="20.0" step="0.1" value="1.0">
+                    <output id="scale_func_output_geo">1.0</output>
+                </div>
+                <div class="sidemenu_margins">
+                    <button id="applyscalegeo" class="edittextbtn_style" type="button">Scale Factor</button>
+                </div>   
+            </div>
+            <div id="stroke_con" class="borderless">
+                <div class="sidemenu_margins">
+                    <p>Stroke Color</p>
+                    <div id="colorpicker_stroke" class="colorpicker_class edittextctls"></div>
+                </div>
+                <div class="sidemenu_margins">
+                    <input type="checkbox" id="stroke" name="stroke" value="stroke" checked>
+                    <label for="stroke">Use Stroke</label>
+                </div>
+                <div class="sidemenu_margins">
+                    <button id="applystrokecolor" class="edittextbtn_style" type="button">Stroke</button>
+                </div>
+            </div>
+            <div id="strokewidth_con" class="borderless">
+                <div class="sidemenu_margins">
+                    <p>Stroke Width</p>
+                </div>
+                <div class="sidemenu_margins">
+                    <input id="strokewidth" class="rangeinput_sidemenu" type="range" min="0.1" max="100" step="0.1" value="4">
+                    <output id="strokewidth_output">3</output> 
+                </div>
+                <div class="sidemenu_margins">
+                    <button id="applystrokewidth" class="edittextbtn_style" type="button">Stroke Width</button>  
+                </div>
+            </div>
+            <div id="fill_con" class="borderless">
+                <div class="sidemenu_margins">
+                    <p>Fill Color</p>
+                    <div id="colorpicker_fill" class="colorpicker_class edittextctls"></div>
+                </div>
+                <div class="sidemenu_margins">
+                    <input type="checkbox" id="fill" name="fill" value="fill">
+                    <label for="fill">Use Fill</label>
+                </div>
+                <div class="sidemenu_margins">
+                    <button id="applyfillcolor" class="edittextbtn_style" type="button">Fill</button>
+                </div>
+            </div>
+            <div id="rotate_geo_con" class="borderless">
+                <div class="sidemenu_margins">
+                    <p>Rotate</p>
+                </div>
+                <div class="sidemenu_margins">
+                    <select name="rotateshape" id="rotateshapesel" class="sidemenu_sel">
+                        <option value="0" selected class="edittextctls">0</option>
+                        <option value="45" class="edittextctls">45</option>
+                        <option value="90" class="edittextctls">90</option>
+                        <option value="180" class="edittextctls">180</option>
+                        <option value="270" class="edittextctls">270</option>
+                    </select>
+                    <input type="text" id="shaperotation_input" class="numinput_sidemenu"> 
+                </div>
+                <div class="sidemenu_margins">
+                    <button id="applyshaperotation" class="edittextbtn_style" type="button">Rotation</button>
+                </div>
+            </div>
+            <div id="clear_geometry_con" class="borderless">
+                <button id="cleargeometry" class="edittextbtn_style sidemenu_margins" type="button">Remove</button>
+            </div>
+        </div>
+        <!--Images-->
+        <div id="img_controls">
+            <div class="cursor_pos_con sidemenu_margins borderless">
+                <div class="sidemenu_margins">
+                    <p class="cursor_x"></p>    
+                </div>
+                <div class="sidemenu_margins">
+                    <p class="cursor_y"></p>    
+                </div>
+            </div>
+            <div class="borderless">
+                <div class="img_column">
+                    <div>
+                        <input type="file" id="inputimg" class="filestyle" data-btnClass="btn-success" data-input="false" accept=".png,.jpg,.jpeg">
+                        <label for="inputimg">Select Image:</label>
+                    </div>
+                    <div>
+                        <div id="listpoint_img_con"></div>
+                    </div>
+                    <div>
+                        <button id="clearlist_img" class="btn btn-success button_layout" type="button">Clear</button>
+                    </div>
+                </div>
+                <div id="selectimg"></div>
+            </div>
+            <div class="borderless">
+                <div id="scale_img_con" class="sidemenu_margins">
+                    <div class="scale_column">
+                        <label for="scale_width_img">Width</label>
+                        <input type="text" id="scale_width_img" class="numinput_sidemenu">
+                    </div>
+                    <div class="scale_column sidemenu_margins">
+                        <label for="scale_height_img">Height</label>
+                        <input type="text" id="scale_height_img" class="numinput_sidemenu">
+                    </div>
+                    <div class="sidemenu_margins">
+                        <button id="scaleimg" class="edittextbtn_style" type="button">Scale</button>
+                    </div>
+                </div>
+            </div>
+            <div id="scale_func_con" class="borderless">
+                <div class="sidemenu_margins">
+                    <p>Scale by Factor</p>
+                </div>
+                <div class="sidemenu_margins">
+                    <input id="scale_func" class="rangeinput_sidemenu" type="range" min="0.1" max="20.0" step="0.1" value="1.0">
+                    <output id="scale_func_output">1.0</output>
+                </div>
+                <div class="sidemenu_margins">
+                    <button id="applyscale" class="edittextbtn_style" type="button">Scale Factor</button>
+                </div>
+            </div>
+            <div id="opacity_con" class="borderless">
+                <div class="sidemenu_margins">
+                    <label for="opacity">Opacity</label>
+                </div>
+                <div class="sidemenu_margins">
+                    <input id="opacity" class="rangeinput_sidemenu" type="range" min="0" max="1.0" step="0.1" value="1.0">
+                    <output id="opacity_output">1.0</output>
+                </div>
+                <div class="sidemenu_margins">
+                    <button id="applyopacity" class="edittextbtn_style" type="button">Opacity</button>
+                </div>
+            </div>
+            <div id="rotate_img_con" class="borderless">
+                <div class="sidemenu_margins">
+                    <p>Rotate</p>
+                </div>
+                <div class="sidemenu_margins">
+                    <select name="rotateimg" id="rotateimgsel" class="sidemenu_sel">
+                        <option value="0" selected class="edittextctls">0</option>
+                        <option value="45" class="edittextctls">45</option>
+                        <option value="90" class="edittextctls">90</option>
+                        <option value="180" class="edittextctls">180</option>
+                        <option value="270" class="edittextctls">270</option>
+                    </select>
+                    <input type="text" id="imgrotation_input" class="numinput_sidemenu">
+                </div>
+                <div class="sidemenu_margins">
+                    <button id="applyimgrotation" class="edittextbtn_style" type="button">Rotation</button>
+                </div>
+            </div>
+            <div id="clear_img_con" class="borderless">
+                <button id="clearimg" class="edittextbtn_style sidemenu_margins" type="button">Remove</button>
+            </div>
+        </div>
+    </div>
+    <!--Writer-->
+    <div id="writer_controls">
+        <div class="dir_row_left">
+            <button class="layers btn btn-success button_layout" type="button">Layers</button>
+            <button id="addtext" class="btn btn-success button_layout" type="button">Text</button>
+            <button id="deletetext" class="btn btn-success button_layout" type="button">Delete</button>
+            <button id="movetext" class="btn btn-success button_layout" type="button">Move</button>
+            <button class="showsidemenu btn btn-success button_layout" type="button">Tools</button>
+        </div>
+        <div class="pos_filename">
+            <button id="save_pdf_text" class="btn btn-success button_layout save_pdf_editor" type="button">Save</button>
+            <div class="filename_hover save_hover_editor">
+                <label for="custom_filename_writer">Provide PDF Filename:</label>
+                <input id="custom_filename_writer" class="custom_filename" type="text">
+            </div>
+        </div>
+    </div>
+    <!--Drawer-->
+    <div id="drawer_controls">
+        <div class="dir_row_left">
+            <button class="layers btn btn-success button_layout" type="button">Layers</button>
+            <button id="newlayer" class="btn btn-success button_layout" type="button">New Layer</button>
+            <button id="pencil" class="btn btn-success button_layout" type="button">Pencil</button>
+            <button id="eraser" class="btn btn-success button_layout" type="button">Eraser</button>
+            <button id="delete_draw" class="btn btn-success button_layout" type="button">Delete</button>
+            <button id="translate_draw" class="btn btn-success button_layout" type="button">Move</button>
+            <button class="showsidemenu btn btn-success button_layout" type="button">Tools</button>
+        </div>
+        <div class="pos_filename">
+            <button class="btn btn-success button_layout save_pdf_editor" type="button">Save</button>
+            <div class="filename_hover save_hover_editor">
+                <label for="custom_filename_drawer">Provide PDF Filename:</label>
+                <input id="custom_filename_drawer" class="custom_filename" type="text">
+            </div>  
+        </div>
+    </div>
+    <!--Geometry-->
+    <div id="geometry_controls">
+        <div class="dir_row_left">
+            <button class="layers btn btn-success button_layout" type="button">Layers</button>
+            <button id="addRect" class="btn btn-success button_layout" type="button">Rectangle</button>
+            <button id="addTriangle" class="btn btn-success button_layout" type="button">Triangle</button>
+            <button id="addCircle" class="btn btn-success button_layout" type="button">Ellipse</button>
+            <button id="deleteshape" class="btn btn-success button_layout" type="button">Delete</button>
+            <button id="moveshape" class="btn btn-success button_layout" type="button">Move</button>
+            <button class="showsidemenu btn btn-success button_layout" type="button">Tools</button>
+        </div>
+        <div class="pos_filename">
+            <button class="btn btn-success button_layout save_pdf_editor" type="button">Save</button>
+            <div class="filename_hover save_hover_editor">
+                <label for="custom_filename_geo">Provide PDF Filename:</label>
+                <input id="custom_filename_geo" class="custom_filename" type="text">
+            </div>
+        </div>
+    </div>
+    <!--Images-->
+    <div id="images_controls">
+        <div class="dir_row_left">
+            <button class="layers btn btn-success button_layout" type="button">Layers</button>
+            <button id="addimg" class="btn btn-success button_layout" type="button">Image</button>
+            <button id="deleteimg" class="btn btn-success button_layout" type="button">Delete</button>
+            <button id="moveimg" class="btn btn-success button_layout" type="button">Move</button>
+            <button class="showsidemenu btn btn-success button_layout" type="button">Tools</button>
+        </div>
+        <div class="pos_filename">
+            <button class="btn btn-success button_layout save_pdf_editor" type="button">Save</button>
+            <div class="filename_hover save_hover_editor">
+                <label for="custom_filename_img">Provide PDF Filename:</label>
+                <input id="custom_filename_img" class="custom_filename" type="text">
+            </div> 
+        </div>
+    </div>
+    <script src="libs/bootstrap-filestyle.min.js"></script>
+    <script src="libs/bootstrap.min.js"></script>
+    <script src="js/pdf_reader_script.js"></script>
+    <script src="js/write_pdf_script.js"></script>
+    <script src="js/draw_pdf_script.js"></script>
+    <script src="js/geometry_pdf_script.js"></script>
+    <script src="js/images_pdf_script.js"></script>
+    <script src="js/layer_buttons_script.js"></script>
+    <script src="js/stack_layers_script.js"></script>
+    <script src="js/select_all_script.js"></script>
+</body>
+
+</html>

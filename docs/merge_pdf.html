@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="Author" content="Janina Schroeder">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>MultiPDFmin - Javascript PDF Editor</title>
+    <link rel="stylesheet" type="text/css" href="css/index_reader_style.css">
+    <link rel="stylesheet" type="text/css" href="css/widget_style.css">
+    <link rel="stylesheet" type="text/css" href="libs/bootstrap.min.css">
+    <script src="libs/pdf-lib.min.js"></script>
+
+    <!--filestyle dependency-->
+    <script src="libs/jquery-3.6.0.min.js"></script>
+    <script src="libs/vue.global.js"></script>
+    <script src="libs/download.min.js"></script>
+</head>
+
+
+<body>
+    <header id="buttons">
+        <div id="start_menu" class="dir_row_left">
+            <a href="index.html" id="open_pdf" class="btn btn-success button_layout">Read</a>
+            <a href="create_blank_pdf.html" id="create_pdf" class="btn btn-success button_layout">Create</a>
+            <a href="split_pdf.html" id="split" class="btn btn-success button_layout">Split</a>
+            <a href="merge_pdf.html" id="merge" class="btn btn-outline-success button_layout">Merge</a>
+            <a href="edit_pdf.html" class="btn btn-success button_layout writepdf">Text</a>
+            <a href="edit_pdf.html" class="btn btn-success button_layout drawpdf">Draw</a>
+            <a href="edit_pdf.html" class="btn btn-success button_layout geometry">Shape</a>
+            <a href="edit_pdf.html" class="btn btn-success button_layout images">Image</a>
+        </div>
+    </header>
+    <div id="merge_app">
+        <div class="pdf_widget merge_widget">
+            <div id="split_pop_up" class="pop_up">
+                <fieldset>
+                    <div class="next_to_open">
+                        <input @input="selectFile" type="file" id="inputmergefile" class="filestyle" data-btnClass="btn-success" data-input="false" accept=".pdf">
+                        <button @click="removeFile" id="remove" class="btn btn-success" disabled type="button">Remove</button>
+                    </div>
+                    <div class="scrollwrapper">
+                        <ul id="sortlist"></ul>
+                    </div>
+                </fieldset>
+                <div class="merge_btns">
+                    <div class="pop_elem_size space_btw_radio">
+                        <button @click="saveMergedPDF" id="save_merge" class="btn btn-success space_btw_radio" disabled type="button">Save</button>
+                        <div class="filename_hover merge_filename_box">
+                            <label for="merge_filename">Provide PDF Filename:</label>
+                            <input @input="setFilename" id="merge_filename" type="text">
+                        </div> 
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="libs/bootstrap-filestyle.min.js"></script>
+    <script src="libs/bootstrap.min.js"></script>
+    <script src="js/merge_pdf_script.js"></script>
+</body>
+
+</html>

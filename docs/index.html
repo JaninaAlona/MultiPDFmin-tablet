@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="Author" content="Janina Schroeder">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>MultiPDFmin - Javascript PDF Editor</title>
+    <link rel="stylesheet" type="text/css" href="css/index_reader_style.css">
+    <link rel="stylesheet" type="text/css" href="libs/bootstrap.min.css">
+    <script src="libs/pdf-lib.min.js"></script>
+
+    <!--filestyle dependency-->
+    <script src="libs/jquery-3.6.0.min.js"></script>
+    <script src="libs/vue.global.js"></script>
+    <script src="libs/download.min.js"></script>
+    <script src="libs/pdf.min.js"></script>
+
+    <!--PDF.js dependency-->
+    <script src="libs/pdf.worker.min.js"></script>
+</head>
+
+<body>
+    <header id="buttons">
+        <div id="start_menu" class="dir_row_left">
+            <a href="index.html" class="btn btn-outline-success button_layout open_pdf">Read</a>
+            <a href="create_blank_pdf.html" id="create_pdf" class="btn btn-success button_layout">Create</a>
+            <a href="split_pdf.html" id="split" class="btn btn-success button_layout">Split</a>
+            <a href="merge_pdf.html" id="merge" class="btn btn-success button_layout">Merge</a>
+            <a href="edit_pdf.html" class="btn btn-success button_layout writepdf">Text</a>
+            <a href="edit_pdf.html" class="btn btn-success button_layout drawpdf">Draw</a>
+            <a href="edit_pdf.html" class="btn btn-success button_layout geometry">Shape</a>
+            <a href="edit_pdf.html" class="btn btn-success button_layout images">Image</a>
+        </div>
+        <div id="reader_controls" class="reader_controls_reader">
+            <div class="dir_col">
+                <div class="dir_row">
+                    <button id="go_previous" class="btn btn-success button_layout" type="button">Previous</button>
+                    <div class="input_layout"><input id="current_page" class="button_layout" value="1" type="text"></div>
+                    <div id="maxPDFPages"></div>
+                    <button id="go_next" class="btn btn-success button_layout" type="button">Next</button>
+                    <button id="zoom_in" class="btn btn-success zoom button_layout" type="button">+</button>
+                    <div class="input_layout"><input id="zoom_factor" class="button_layout" value="100%" type="text"></div>
+                    <button id="zoom_out" class="btn btn-success zoom button_layout" type="button">-</button>
+                </div>
+                <div class="dir_row">
+                    <button id="spin_right" class="btn btn-success button_layout" type="button">Spin CW</button>
+                    <button id="spin_left" class="btn btn-success button_layout" type="button">Spin CCW</button>
+                    <button id="dragpdf" class="btn btn-success button_layout" type="button">Drag</button>
+                    <div class="pos_filename">
+                        <button id="save_pdf_reader" class="btn btn-success button_layout save_pdf_editor" type="button">Save</button>
+                        <div class="filename_hover save_hover_reader">
+                            <label for="custom_filename_reader">Provide PDF Filename:</label>
+                            <input id="custom_filename_reader" class="custom_filename" type="text">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <input type="file" class="filestyle inputfile" data-btnClass="btn btn-success" data-input="false" accept=".pdf">
+    </header>
+    <div id="viewer_bg">
+        <div class="scrollwrapper top_reader">
+            <div class="drag_con">
+                <div class="dragwrapper">
+                    <div class="pdf_viewer_con justify-center">
+                        <div class="pdf_viewer justify-center"></div>  
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="libs/bootstrap-filestyle.min.js"></script>
+    <script src="libs/bootstrap.min.js"></script>
+    <script src="js/pdf_reader_script.js"></script>
+</body>
+
+</html>

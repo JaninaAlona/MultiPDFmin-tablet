@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="Author" content="Janina Schroeder">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>MultiPDFmin - Javascript PDF Editor</title>
+    <link rel="stylesheet" type="text/css" href="css/index_reader_style.css">
+    <link rel="stylesheet" type="text/css" href="css/create_blank_pdf_style.css">
+    <link rel="stylesheet" type="text/css" href="css/widget_style.css">
+    <link rel="stylesheet" type="text/css" href="css/index_reader_style.css">
+    <link rel="stylesheet" type="text/css" href="libs/bootstrap.min.css">
+    <script src="libs/pdf-lib.min.js"></script>
+
+    <!--filestyle dependency-->
+    <script src="libs/jquery-3.6.0.min.js"></script>
+    <script src="libs/vue.global.js"></script>
+    <script src="libs/download.min.js"></script>
+</head>
+
+<body>
+    <header id="buttons">
+        <div id="start_menu" class="dir_row_left">
+            <a href="index.html" class="btn btn-success button_layout open_pdf">Read</a>
+            <a href="create_blank_pdf.html" id="create_pdf" class="btn btn-outline-success button_layout">Create</a>
+            <a href="split_pdf.html" id="split" class="btn btn-success button_layout">Split</a>
+            <a href="merge_pdf.html" id="merge" class="btn btn-success button_layout">Merge</a>
+            <a href="edit_pdf.html" class="btn btn-success button_layout writepdf">Text</a>
+            <a href="edit_pdf.html" class="btn btn-success button_layout drawpdf">Draw</a>
+            <a href="edit_pdf.html" class="btn btn-success button_layout geometry">Shape</a>
+            <a href="edit_pdf.html" class="btn btn-success button_layout images">Image</a>
+        </div>
+    </header>
+    <div id="create_blank_app">
+        <div class="pdf_widget create_widget">
+            <div id="create_pop_up" class="pop_up">
+                <fieldset>
+                    <div class="pop_bottom_pad">
+                        <label for="blank_pages">Number of pages</label>
+                        <input id="blank_pages" type="text" value="1" />
+                    </div>
+                    <div class="pop_bottom_pad">
+                        <label for="dinasize">DIN A page sizes</label>
+                        <select class="btn btn-success" name="size" id="dinasize">
+                            <option id="a1" class="dinaSel">DIN A1</option>
+                            <option id="a2" class="dinaSel">DIN A2</option>
+                            <option id="a3" class="dinaSel">DIN A3</option>
+                            <option id="a4" selected="selected" class="dinaSel">DIN A4</option>
+                            <option id="a5" class="dinaSel">DIN A5</option>
+                            <option id="a6" class="dinaSel">DIN A6</option>
+                            <option id="a7" class="dinaSel">DIN A7</option>
+                        </select>
+                    </div>
+                    <div class="pop_bottom_pad">
+                        <div class="pop_bottom_pad">Orientation</div>
+                        <div class="create_orientation">
+                            <div class="radio_offset" >
+                                <label class="space_btw_radio" for="portrait">Portrait</label>
+                                <input type="radio" name="orientation" id="portrait" checked>
+                            </div>
+                            <div class="radio_offset" >
+                                <label class="space_btw_radio" for="landscape">Landscape</label>
+                                <input type="radio" name="orientation" id="landscape">
+                            </div>
+                            <div class="radio_offset" >
+                                <label class="space_btw_radio" for="quadratic">Quadratic</label>
+                                <input type="radio" name="orientation" id="quadratic">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="pop_bottom_pad">
+                        <label for="blank_width">Width in mm</label>
+                        <input id="blank_width" type="text" value="210" />
+                    </div>
+                    <div class="pop_bottom_pad">
+                        <label for="blank_height">Height in mm</label>
+                        <input id="blank_height" type="text" value="297" />
+                    </div>
+                    <div>
+                        <button @click="savePDF" id="save_blank" class="btn btn-success space_btw_radio" type="button">Save</button>
+                        <div class="filename_hover">
+                            <label for="blank_filename">Provide PDF Filename:</label>
+                            <input @input="setFilename" id="blank_filename" type="text" :value="blankPDFfilename" />
+                        </div> 
+                    </div>
+                </fieldset> 
+            </div>
+        </div>
+    </div>
+    <script src="libs/bootstrap-filestyle.min.js"></script>
+    <script src="libs/bootstrap.min.js"></script>
+    <script src="js/create_blank_pdf_script.js"></script>
+</body>
+
+</html>
