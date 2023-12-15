@@ -262,6 +262,7 @@ function zoomDrawing(controlP, zoomWidth, zoomHeight) {
 
 function scaleCanvas(controlP, zoomWidth, zoomHeight) {
     const renderCanvasW = controlP.editImg.parentNode.parentNode.children[0].width;
+    console.log(controlP.editImg.parentNode.parentNode.children[0]);
     const renderCanvasH = controlP.editImg.parentNode.parentNode.children[0].height;
     controlP.editImg.width = renderCanvasW;
     controlP.editImg.height = renderCanvasH;
