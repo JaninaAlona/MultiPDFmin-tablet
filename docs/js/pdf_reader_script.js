@@ -1221,9 +1221,8 @@ function updateCursorX() {
         writeLayers[i].addEventListener("mousemove", function(e) {
             let rect = writeLayers[i].getBoundingClientRect();
             let cursorXs = document.getElementsByClassName("cursor_x");
-            let clientXReplace = (e.targetTouches[0] ? e.targetTouches[0].pageX : e.changedTouches[e.changedTouches.length-1].pageX);
             for (let i = 0; i < cursorXs.length; i++) {
-                cursorXs[i].innerText = `Cursor X: ${parseInt(clientXReplace - rect.left)}`;
+                cursorXs[i].innerText = `Cursor X: ${parseInt(e.clientX - rect.left)}`;
             }
         }, false);
     }
@@ -1235,9 +1234,8 @@ function updateCursorY() {
         writeLayers[i].addEventListener("mousemove", function(e) {
             let rect = writeLayers[i].getBoundingClientRect();
             let cursorYs = document.getElementsByClassName("cursor_y");
-            let clientYReplace = (e.targetTouches[0] ? e.targetTouches[0].pageY : e.changedTouches[e.changedTouches.length-1].pageY);
             for (let i = 0; i < cursorYs.length; i++) {
-                cursorYs[i].innerText = `Cursor Y: ${parseInt(clientYReplace - rect.top)}`;
+                cursorYs[i].innerText = `Cursor Y: ${parseInt(e.clientY - rect.top)}`;
             }
         }, false);
     }
