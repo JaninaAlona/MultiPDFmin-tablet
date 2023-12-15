@@ -197,6 +197,7 @@ function createUserDrawLayer(e, editImgClass, thisPage, writeLayer) {
     canvasContainer.style.position = "absolute";
     canvasContainer.style.top = 0;
     canvasContainer.width = pdfCanvases[thisPage-1].width;
+    console.log(canvasContainer.width);
     canvasContainer.height = pdfCanvases[thisPage-1].height;
     canvasContainer.setAttribute('data-page', thisPage);
     canvasContainer.setAttribute('data-index', drawControllerPointCounter);
@@ -260,8 +261,12 @@ function zoomDrawing(controlP, zoomWidth, zoomHeight) {
 }
 
 function scaleCanvas(controlP, zoomWidth, zoomHeight) {
-    controlP.editImg.width = originalWidth * zoomWidth;
-    controlP.editImg.height = originalHeight * zoomHeight;
+    const renderCanvasW = controlP.editImg.parentNode.parentNode.children[0].width;
+    const renderCanvasH = controlP.editImg.parentNode.parentNode.children[0].height;
+    controlP.editImg.width = renderCanvasW;
+    controlP.editImg.height = renderCanvasH;
+    // controlP.editImg.width = originalWidth * zoomWidth;
+    // controlP.editImg.height = originalHeight * zoomHeight;
     let context = controlP.editImg.getContext("2d");
     let width = context.canvas.width;
     let height = context.canvas.height;
