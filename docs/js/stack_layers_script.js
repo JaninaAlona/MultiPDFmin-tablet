@@ -194,18 +194,18 @@ function moveLayer(target) {
     let current;
     let layername;
     for (const i of items) {
-        // i.draggable = true;
-        i.ontouchstart = e => {
+        i.draggable = true;
+        i.ondragstart = e => {
             resetAllModes();
             current = i;
             layername = current.children[1];
             markSingleLayer(layername);
+        };
+        i.ondragover = e => {
             e.preventDefault();
         };
-        i.ontouchmove = e => {
+        i.ondrop = e => {
             e.preventDefault();
-        };
-        i.ontouchleave = e => {
             if (i != current) {
                 let currentpos = 0, droppedpos = 0;
                 for (let it=0; it<items.length; it++) {
@@ -355,7 +355,6 @@ function moveLayer(target) {
                     pageLayerGroups[j].parentNode.removeChild(pageLayerGroups[j]);
                 }
             }
-            e.preventDefault();
         };
     }
 }
