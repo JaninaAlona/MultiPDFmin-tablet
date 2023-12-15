@@ -204,6 +204,9 @@ async function renderAllPages(page) {
     let viewport = page.getViewport({
         scale: pdfState.zoom
     });
+    let viewportOriginal = page.getViewport({
+        scale: 1
+    });
     let canvas;
     let pdfViewers = document.getElementsByClassName('pdf_viewer');
     for (let i = 0; i < pdfViewers.length; i++) {
@@ -214,8 +217,8 @@ async function renderAllPages(page) {
             div.width = viewport.width;
             div.height = viewport.height;
             div.style.marginBottom = "20px";
-            originalWidth = viewport.width;
-            originalHeight = viewport.height;
+            originalWidth = viewportOriginal.width;
+            originalHeight = viewportOriginal.height;
             div.setAttribute('data-write', pageCounter);
             div.setAttribute("data-rotation", 0);
             div.classList.add("write_layer");
