@@ -362,7 +362,7 @@ function moveShape(shapeBox) {
         clicked = false;
         short = false;
         shapeBox.controlBox.onclick = detectClick;
-        shapeBox.controlBox.onmousedown = startMovingShape;
+        shapeBox.controlBox.ontouchstart = startMovingShape;
     }
 
     function detectClick() {
@@ -380,10 +380,13 @@ function moveShape(shapeBox) {
         if (userModesGeometry[4] && !clicked) {
             mouseIsDown = true;
             markSingleLayerOnEdit(shapeBox);
-            x = shapeBox.controlBox.offsetLeft - e.clientX;
-            y = shapeBox.controlBox.offsetTop - e.clientY;
-            shapeBox.controlBox.onmouseup = stopMovingShape;
-            shapeBox.controlBox.onmousemove = movingShape;
+            let clientXReplace = (e.targetTouches[0] ? e.targetTouches[0].pageX : e.changedTouches[e.changedTouches.length-1].pageX);
+            let clientYReplace = (e.targetTouches[0] ? e.targetTouches[0].pageY : e.changedTouches[e.changedTouches.length-1].pageY);
+            x = shapeBox.controlBox.offsetLeft - clientXReplace;
+            y = shapeBox.controlBox.offsetTop - clientYReplace;
+            shapeBox.controlBox.ontouchend = stopMovingShape;
+            shapeBox.controlBox.ontouchmove = movingShape;
+            e.preventDefault();
         }
     }
 
@@ -394,11 +397,14 @@ function moveShape(shapeBox) {
                 shapeBox.originX = 0;
                 shapeBox.originY = 0;
                 shapeBox.rotateControlPoint();
-            }       
-            shapeBox.controlBox.style.left = (e.clientX + x) + "px";
-            shapeBox.controlBox.style.top = (e.clientY + y) + "px"; 
+            } 
+            let clientXReplace = (e.targetTouches[0] ? e.targetTouches[0].pageX : e.changedTouches[e.changedTouches.length-1].pageX);
+            let clientYReplace = (e.targetTouches[0] ? e.targetTouches[0].pageY : e.changedTouches[e.changedTouches.length-1].pageY);      
+            shapeBox.controlBox.style.left = (clientXReplace + x) + "px";
+            shapeBox.controlBox.style.top = (clientYReplace + y) + "px"; 
             shapeBox.x = e.clientX + x;
             shapeBox.y = e.clientY + y;
+            e.preventDefault();
         }
     }
 
@@ -414,9 +420,10 @@ function moveShape(shapeBox) {
                 currentShape.y = (shapeBox.y + 20)/pdfState.zoom;
             }
             updateUserShapeLayer(shapeBox);
-            shapeBox.controlBox.onmouseup = null;
-            shapeBox.controlBox.onmousemove = null;
+            shapeBox.controlBox.ontouchend = null;
+            shapeBox.controlBox.ontouchmove = null;
             shapeBox.controlBox.onclick = null;
+            e.preventDefault();
         }
     }
 }
