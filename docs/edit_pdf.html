@@ -57,6 +57,14 @@
         </div>
         <input type="file" class="filestyle inputfile display_edit_ctls" data-btnClass="btn btn-success" data-input="false" data-mode="edit_text" accept=".pdf">
     </header>
+    <div class="error_widget_con">
+        <div class="error_widget encrypted_error">
+            PDF document is encrypted. Encryption is not supported.
+        </div>
+        <div class="error_widget no_pdf_error">
+            Selected file is not a .pdf file.
+        </div>
+    </div>
     <div id="viewer_bg">
         <div class="scrollwrapper top_editor">
             <div class="drag_con">
@@ -618,7 +626,6 @@
     </div>
     <script src="libs/bootstrap-filestyle.min.js"></script>
     <script src="libs/bootstrap.min.js"></script>
-    <script src="libs/DragDropTouch.js"></script>
     <script src="js/pdf_reader_script.js"></script>
     <script src="js/write_pdf_script.js"></script>
     <script src="js/draw_pdf_script.js"></script>

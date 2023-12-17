@@ -236,45 +236,6 @@ function createUserDrawLayer(e, editImgClass, thisPage, writeLayer) {
 }
 
 
-function zoomDrawing(controlP, zoomWidth, zoomHeight) {
-    let context = controlP.editImg.getContext("2d");
-    context.save();
-    context.clearRect(0, 0, context.canvas.width, context.canvas.height);  
-    context.save();
-    scaleCanvas(controlP, zoomWidth, zoomHeight);
-    for (let i = 0; i < controlP.elementToControl.paths.length; i++) {
-        context.beginPath();  
-        context.lineCap = "round";
-        context.lineJoin = "round";       
-        context.lineWidth = controlP.elementToControl.paths[i][0].line;
-        context.strokeStyle = controlP.elementToControl.paths[i][0].color;   
-        context.globalCompositeOperation = controlP.elementToControl.paths[i][0].compositeOp;
-        context.moveTo(controlP.elementToControl.paths[i][0].x, controlP.elementToControl.paths[i][0].y); 
-        
-        for (let j = 1; j < controlP.elementToControl.paths[i].length; j++)
-            context.lineTo(controlP.elementToControl.paths[i][j].x, controlP.elementToControl.paths[i][j].y);
-        
-        context.stroke();
-    }
-    context.restore();
-}
-
-function scaleCanvas(controlP, zoomWidth, zoomHeight) {
-    controlP.editImg.width = originalWidth * zoomWidth;
-    controlP.editImg.height = originalHeight * zoomHeight;
-    let context = controlP.editImg.getContext("2d");
-    let width = context.canvas.width;
-    let height = context.canvas.height;
-    context.translate(width, height);
-    context.scale(zoomWidth, zoomHeight);
-    context.translate(-width/zoomWidth, -height/zoomHeight); 
-    if (userModesDrawer[0]) {
-        context.globalCompositeOperation = 'source-over';
-    } else if (userModesDrawer[1]) {
-        context.globalCompositeOperation = 'destination-out';
-    } 
-};
-
 document.getElementById('eraser').addEventListener("click", function() { 
     resetAllModes();
     userModesDrawer[1] = true;

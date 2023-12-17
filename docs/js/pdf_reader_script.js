@@ -5,7 +5,9 @@ let pdfState = {
     zoom: 1,
     originalPDFBytes: null,
     existingPDFBytes: null,
-    savedPDFBytes: null
+    savedPDFBytes: null,
+    originalWidths: [],
+    originalHeights: []
 }
 
 let pageCounter = 1;
@@ -17,8 +19,6 @@ let isDrawing = false;
 let isErasing = false;
 let draggingMode = false;
 let mouseIsDown = false;
-let originalWidth;
-let originalHeight;
 let userModes = [];
 let userModesDrawer = [];
 let userModesGeometry = [];
@@ -40,6 +40,9 @@ let writePdfBtn;
 let drawPdfBtn;
 let geometryBtn;
 let imagesBtn;
+let encrypted;
+let editorMode = false;
+let renderCompleted = false;
 
 
 let inputFileButtons = document.getElementsByClassName('inputfile');
@@ -55,21 +58,41 @@ for (let i = 0; i < inputFileButtons.length; i++) {
             const loadingTask = pdfjsLib.getDocument(typedarray);
             loadingTask.promise.then(async (pdf) => {
                 await kickOff(pdf);
-                document.getElementById('maxPDFPages').innerHTML = pdf._pdfInfo.numPages + " pages";
-                restrictInputValues('current_page', 1, pdf._pdfInfo.numPages, false, false);
-                pdfState.lastPage = pdf._pdfInfo.numPages;
-                updateCursorX();
-                updateCursorY();
+                if (!encrypted) {
+                    fileLoaded = true;
+                    onetimeSetup = true;
+                    if (file.name.endsWith(".pdf")) {
+                        pdfFileName = file.name;
+                        document.getElementById("current_page").value = 1;
+                        let pdfViewers = document.getElementsByClassName("pdf_viewer")
+                        for (let i = 0; i < pdfViewers.length; i++) {
+                            pdfViewers[i].style.display = "flex";
+                        }
+                        document.getElementById("reader_controls").style.display = "flex";
+                        document.getElementById("viewer_bg").style.display = "flex";
+                        document.getElementById('maxPDFPages').innerHTML = pdf._pdfInfo.numPages + " pages";
+                        pdfState.lastPage = pdf._pdfInfo.numPages;
+                        restrictInputValues('current_page', 1, pdf._pdfInfo.numPages, false, false);
+                        restrictInputValues('zoom_factor', 1, 800, true, false);
+                        setCustomFilename();
+                        initEditor();
+                    }
+                } else {
+                    const encryptedErrorWidgets = document.getElementsByClassName("encrypted_error");
+                    for (let i = 0; i < encryptedErrorWidgets.length; i++) {
+                        encryptedErrorWidgets[i].style.display = "flex";
+                    }
+                }
+            }).catch(unsupportedFileErr => {
+                const noPDFErrorWidgets = document.getElementsByClassName("no_pdf_error");
+                for (let i = 0; i < noPDFErrorWidgets.length; i++) {
+                    noPDFErrorWidgets[i].style.display = "flex";
+                }
             });
-            document.getElementById("viewer_bg").style.display = "flex";
-            restrictInputValues('zoom_factor', 1, 800, true, false);
-            setCustomFilename();
         }
         if (file) {
             fileReader.readAsArrayBuffer(file);
-            fileLoaded = true;
         }
-        pdfFileName = file.name;
     }, false);
 }
 
@@ -105,17 +128,41 @@ function resetRendering() {
     fontBytes = [];
     imagesBase64Strings = [];
     pageCounter = 1;
+    encrypted = false;
+    fileLoaded = false;
+    editorMode = false;
+    renderCompleted = false;
+    pdfState.pdf = null,
+    pdfState.currentPage = 1;
+    pdfState.lastPage = 1;
+    pdfState.zoom = 1;
+    pdfState.originalPDFBytes = null;
+    pdfState.existingPDFBytes = null;
+    pdfState.savedPDFBytes = null;
+    pdfState.originalWidths = [];
+    pdfState.originalHeights = [];
 }
 
-async function kickOff(pdf) {
-    resetToDefaults();
-    const pdfDoc = await PDFLib.PDFDocument.load(pdfState.originalPDFBytes);
-    const pdfBytes = await pdfDoc.save();
-    pdfState.originalPDFBytes = pdfBytes;
-    pdfState.existingPDFBytes = pdfState.originalPDFBytes;
-    pdfState.pdf = pdf;
-    adjustPDFToUserViewport(pdfDoc);
-    await pdfState.pdf.getPage(1).then(renderAllPages);
+async function kickOff(pdf) { 
+    let pdfDoc;
+    try {
+        pdfDoc = await PDFLib.PDFDocument.load(pdfState.originalPDFBytes);
+    } catch(encryptedErr) {
+        encrypted = true;
+    }
+    if (!encrypted) {
+        const pdfBytes = await pdfDoc.save();
+        pdfState.originalPDFBytes = pdfBytes;
+        pdfState.existingPDFBytes = pdfState.originalPDFBytes;
+        pdfState.pdf = pdf;
+        adjustPDFToUserViewport(pdfDoc);
+        await pdfState.pdf.getPage(1).then(async (page) => {
+            if (this.page) {
+                this.page.destroy();
+            }
+            await renderAllPages(page);
+        });
+    }
 }
 
 
@@ -217,8 +264,8 @@ async function renderAllPages(page) {
             div.width = viewport.width;
             div.height = viewport.height;
             div.style.marginBottom = "20px";
-            originalWidth = viewportOriginal.width;
-            originalHeight = viewportOriginal.height;
+            pdfState.originalWidths.push(viewportOriginal.width);
+            pdfState.originalHeights.push(viewportOriginal.height);
             div.setAttribute('data-write', pageCounter);
             div.setAttribute("data-rotation", 0);
             div.classList.add("write_layer");
@@ -246,9 +293,21 @@ async function renderAllPages(page) {
         canvasContext: context,
         viewport: viewport
     });
+    if (this.page) {
+        this.page.destroy();
+    }
     pageCounter++;
+    if (pdfState.pdf != null && pageCounter > pdfState.pdf._pdfInfo.numPages) {
+        renderCompleted = true;
+    }
     if (pdfState.pdf != null && pageCounter <= pdfState.pdf._pdfInfo.numPages) {
-        await pdfState.pdf.getPage(pageCounter).then(renderAllPages);
+        renderCompleted = false;
+        await pdfState.pdf.getPage(1).then(async (page) => {
+            if (this.page) {
+                this.page.destroy();
+            }
+            await renderAllPages(page);
+        });
     }
 }
 
@@ -289,16 +348,23 @@ function adjustPDFToUserViewport(pdfDoc) {
 
 async function zoomIn(e) {
     resetAllModes();
-    e.preventDefault;
-    if (pdfState.zoom <= 8.0) {
-        let percent = toPercent(pdfState.zoom);
-        percent += 20;
-        if (percent <= 800) {
-            document.getElementById('zoom_factor').value = percent + "%";
-            pdfState.zoom = toFactor(percent);
-            placeEditorElements();
-            pageCounter = 1;
-            await pdfState.pdf.getPage(1).then(renderAllPages);
+    if (renderCompleted) {
+        e.preventDefault;
+        if (pdfState.zoom <= 8.0) {
+            let percent = toPercent(pdfState.zoom);
+            percent += 20;
+            if (percent <= 800) {
+                document.getElementById('zoom_factor').value = percent + "%";
+                pdfState.zoom = toFactor(percent);
+                placeEditorElements();
+                pageCounter = 1;
+                await pdfState.pdf.getPage(1).then(async (page) => {
+                    if (this.page) {
+                        this.page.destroy();
+                    }
+                    await renderAllPages(page);
+                });
+            }
         }
     }
 }
@@ -306,16 +372,23 @@ async function zoomIn(e) {
 
 async function zoomOut(e) {
     resetAllModes();
-    e.preventDefault;
-    if (pdfState.zoom >= 0.1) {
-        let percent = toPercent(pdfState.zoom);
-        percent -= 20;
-        if (percent >= 10) {
-            document.getElementById('zoom_factor').value = percent + "%";
-            pdfState.zoom = toFactor(percent);
-            placeEditorElements();
-            pageCounter = 1;
-            await pdfState.pdf.getPage(1).then(renderAllPages);
+    if (renderCompleted) {
+        e.preventDefault;
+        if (pdfState.zoom >= 0.1) {
+            let percent = toPercent(pdfState.zoom);
+            percent -= 20;
+            if (percent >= 10) {
+                document.getElementById('zoom_factor').value = percent + "%";
+                pdfState.zoom = toFactor(percent);
+                placeEditorElements();
+                pageCounter = 1;
+                await pdfState.pdf.getPage(1).then(async (page) => {
+                    if (this.page) {
+                        this.page.destroy();
+                    }
+                    await renderAllPages(page);
+                });
+            }
         }
     }
 }
@@ -323,31 +396,38 @@ async function zoomOut(e) {
 
 async function enterZoomFactor(e) {
     resetAllModes();
-    e.preventDefault;
-    let triggerZoom = false;
-    if (e.key == 'Enter') {
-        let desiredZoom = document.getElementById('zoom_factor').value;
-        while (desiredZoom.search(" ") > -1) {
-            desiredZoom = desiredZoom.replace(" ", "");
-        }
-        let zoomVal = 0;
-        if (desiredZoom.charAt(desiredZoom.length - 1) === '%') {
-            zoomVal = desiredZoom.substring(0, desiredZoom.length - 1);     
-        } else {
-            zoomVal = desiredZoom;
-        }
-        if (!isNaN(zoomVal)) {
-            zoomVal = parseInt(zoomVal);      
-            triggerZoom = true;   
-        } else {
-            triggerZoom = false;
-        }
-        if (triggerZoom && zoomVal >= 1 && zoomVal <= 800) {
-            pdfState.zoom = toFactor(zoomVal);
-            document.getElementById("zoom_factor").value = zoomVal + "%";
-            placeEditorElements();
-            pageCounter = 1;
-            await pdfState.pdf.getPage(1).then(renderAllPages);
+    if (renderCompleted) {
+        e.preventDefault;
+        let triggerZoom = false;
+        if (e.key == 'Enter') {
+            let desiredZoom = document.getElementById('zoom_factor').value;
+            while (desiredZoom.search(" ") > -1) {
+                desiredZoom = desiredZoom.replace(" ", "");
+            }
+            let zoomVal = 0;
+            if (desiredZoom.charAt(desiredZoom.length - 1) === '%') {
+                zoomVal = desiredZoom.substring(0, desiredZoom.length - 1);     
+            } else {
+                zoomVal = desiredZoom;
+            }
+            if (!isNaN(zoomVal)) {
+                zoomVal = parseInt(zoomVal);      
+                triggerZoom = true;   
+            } else {
+                triggerZoom = false;
+            }
+            if (triggerZoom && zoomVal >= 1 && zoomVal <= 800) {
+                pdfState.zoom = toFactor(zoomVal);
+                document.getElementById("zoom_factor").value = zoomVal + "%";
+                placeEditorElements();
+                pageCounter = 1;
+                await pdfState.pdf.getPage(1).then(async (page) => {
+                    if (this.page) {
+                        this.page.destroy();
+                    }
+                    await renderAllPages(page);
+                });
+            }
         }
     }
 }
@@ -413,15 +493,54 @@ function placeEditorElements() {
 }
 
 async function zoomText(controlP) {
-    controlP.editImg.width = originalWidth * pdfState.zoom;
-    controlP.editImg.height = originalHeight * pdfState.zoom;
+    controlP.editImg.width = pdfState.originalWidths[controlP.page-1] * pdfState.zoom;
+    controlP.editImg.height = pdfState.originalHeights[controlP.page-1] * pdfState.zoom;
     const currentText = controlP.elementToControl;
     await updateUserLayer(controlP, currentText.pdfBytes); 
 }
 
+function zoomDrawing(controlP, zoomWidth, zoomHeight) {
+    let context = controlP.editImg.getContext("2d");
+    context.save();
+    context.clearRect(0, 0, context.canvas.width, context.canvas.height);  
+    context.save();
+    scaleCanvas(controlP, zoomWidth, zoomHeight);
+    for (let i = 0; i < controlP.elementToControl.paths.length; i++) {
+        context.beginPath();  
+        context.lineCap = "round";
+        context.lineJoin = "round";       
+        context.lineWidth = controlP.elementToControl.paths[i][0].line;
+        context.strokeStyle = controlP.elementToControl.paths[i][0].color;   
+        context.globalCompositeOperation = controlP.elementToControl.paths[i][0].compositeOp;
+        context.moveTo(controlP.elementToControl.paths[i][0].x, controlP.elementToControl.paths[i][0].y); 
+        
+        for (let j = 1; j < controlP.elementToControl.paths[i].length; j++)
+            context.lineTo(controlP.elementToControl.paths[i][j].x, controlP.elementToControl.paths[i][j].y);
+        
+        context.stroke();
+    }
+    context.restore();
+}
+
+function scaleCanvas(controlP, zoomWidth, zoomHeight) {
+    controlP.editImg.width = pdfState.originalWidths[controlP.page-1] * pdfState.zoom;
+    controlP.editImg.height = pdfState.originalHeights[controlP.page-1] * pdfState.zoom;
+    let context = controlP.editImg.getContext("2d");
+    let width = context.canvas.width;
+    let height = context.canvas.height;
+    context.translate(width, height);
+    context.scale(zoomWidth, zoomHeight);
+    context.translate(-width/zoomWidth, -height/zoomHeight); 
+    if (userModesDrawer[0]) {
+        context.globalCompositeOperation = 'source-over';
+    } else if (userModesDrawer[1]) {
+        context.globalCompositeOperation = 'destination-out';
+    } 
+};
+
 async function zoomImages(controlP) {
-    controlP.editImg.width = originalWidth * pdfState.zoom;
-    controlP.editImg.height = originalHeight * pdfState.zoom;
+    controlP.editImg.width = pdfState.originalWidths[controlP.page-1] * pdfState.zoom;
+    controlP.editImg.height = pdfState.originalHeights[controlP.page-1] * pdfState.zoom;
     const currentImage = controlP.elementToControl;
     await updateUserLayer(controlP, currentImage.pdfBytes);  
 }
@@ -437,24 +556,14 @@ function zoomGeometry(controlP) {
 }
 
 function scaleEditImgShapeCanvas(editImg) {
-    editImg.width = originalWidth * pdfState.zoom;
-    editImg.height = originalHeight * pdfState.zoom;
+    editImg.width = pdfState.originalWidths[parseInt(editImg.getAttribute("data-page"))-1] * pdfState.zoom;
+    editImg.height = pdfState.originalHeights[parseInt(editImg.getAttribute("data-page"))-1] * pdfState.zoom;
     let ctx = editImg.getContext("2d");
     let width = ctx.canvas.width;
     let height = ctx.canvas.height;
     ctx.translate(width, height);
     ctx.scale(pdfState.zoom, pdfState.zoom);
     ctx.translate(-width/pdfState.zoom, -height/pdfState.zoom); 
-}
-
-function resetToDefaults() {
-    onetimeSetup = true;
-    document.getElementById("current_page").value = 1;
-    let pdfViewers = document.getElementsByClassName("pdf_viewer")
-    for (let i = 0; i < pdfViewers.length; i++) {
-        pdfViewers[i].style.display = "flex";
-    }
-    document.getElementById("reader_controls").style.display = "flex";
 }
 
 function toPercent(factor) {
@@ -636,8 +745,10 @@ async function setPageRotation(pdfDoc, currentPage, newRotation) {
     writeLayers[currentPage-1].width = newWidth;
     writeLayers[currentPage-1].height = newHeight;
     writeLayers[currentPage-1].setAttribute("data-rotation", newRotation);
-    originalWidth = newWidth;
-    originalHeight = newHeight;
+    let pdfStateOrigWidth = pdfState.originalWidths[currentPage-1];
+    let pdfStateOrigHeight = pdfState.originalHeights[currentPage-1];
+    pdfState.originalWidths[currentPage-1] = pdfStateOrigHeight;
+    pdfState.originalHeights[currentPage-1] = pdfStateOrigWidth;
     renderContextes[currentPage-1].width = newWidth;
     renderContextes[currentPage-1].height = newHeight;
 }
@@ -778,15 +889,17 @@ async function canvasToImage(editImg) {
     outputPDF.getPages()[thisPage-1].drawImage(pngImage, {
         x: 0,
         y: 0,
-        width: originalWidth,
-        height: originalHeight
+        width: pdfState.originalWidths[thisPage-1],
+        height: pdfState.originalHeights[thisPage-1]
     });
 }
 
 
 if (document.getElementsByClassName("display_edit_ctls")[0] !== undefined && document.getElementsByClassName("display_edit_ctls")[0] !== null) {
     displayEditControls = document.getElementsByClassName("display_edit_ctls")[0];
-    displayEditControls.addEventListener("change", initEditor, false);
+    displayEditControls.addEventListener("change", function() {
+        editorMode = true
+    }, false);
 }
 
 if (document.getElementById("writepdfbtn") !== undefined && document.getElementById("writepdfbtn") !== null) {
@@ -795,7 +908,8 @@ if (document.getElementById("writepdfbtn") !== undefined && document.getElementB
         e.preventDefault();
         resetAllModes();
         highlightTextButton();
-        if (fileLoaded) {
+        if (fileLoaded && !encrypted) {
+            editorMode = true;
             document.getElementById('writer_controls').style.display = "flex";
             document.getElementById('editor_controls').style.display = "flex";
             document.getElementById('drawer_controls').style.display = "none";
@@ -814,7 +928,8 @@ if (document.getElementById("drawpdfbtn") !== undefined && document.getElementBy
         e.preventDefault();
         resetAllModes();
         highlightDrawButton();
-        if (fileLoaded) {
+        if (fileLoaded && !encrypted) {
+            editorMode = true;
             document.getElementById('drawer_controls').style.display = "flex";
             document.getElementById('pencil_controls').style.display = "flex";
             document.getElementById('writer_controls').style.display = "none";
@@ -833,7 +948,8 @@ if (document.getElementById("geometrybtn") !== undefined && document.getElementB
         e.preventDefault();
         resetAllModes();
         highlightShapeButton();
-        if (fileLoaded) {
+        if (fileLoaded && !encrypted) {
+            editorMode = true;
             document.getElementById('writer_controls').style.display = "none";
             document.getElementById('editor_controls').style.display = "none";
             document.getElementById('drawer_controls').style.display = "none";
@@ -852,7 +968,8 @@ if (document.getElementById("imagesbtn") !== undefined && document.getElementByI
         e.preventDefault();
         resetAllModes();
         highlightImageButton();
-        if (fileLoaded) {
+        if (fileLoaded && !encrypted) {
+            editorMode = true;
             document.getElementById('writer_controls').style.display = "none";
             document.getElementById('editor_controls').style.display = "none";
             document.getElementById('drawer_controls').style.display = "none";
@@ -915,82 +1032,86 @@ function highlightImageButton() {
 
 
 function initEditor() {
-    if (fileLoaded && displayEditControls.getAttribute("data-mode") === "edit_text") {
-        document.getElementById('sidemenu').style.display = "flex";
-        document.getElementById('layer_stack').style.display = "flex";
-        document.getElementById('writer_controls').style.display = "flex";
-        document.getElementById('editor_controls').style.display = "flex";
-        document.getElementById('drawer_controls').style.display = "none";
-        document.getElementById('pencil_controls').style.display = "none";
-        document.getElementById('geometry_controls').style.display = "none";
-        document.getElementById('shape_controls').style.display = "none";
-        document.getElementById('images_controls').style.display = "none";
-        document.getElementById('img_controls').style.display = "none";  
-        
-    }
-    if (fileLoaded && displayEditControls.getAttribute("data-mode") === "edit_draw") {
-        document.getElementById('sidemenu').style.display = "flex";
-        document.getElementById('layer_stack').style.display = "flex";
-        document.getElementById('drawer_controls').style.display = "flex";
-        document.getElementById('pencil_controls').style.display = "flex";
-        document.getElementById('writer_controls').style.display = "none";
-        document.getElementById('editor_controls').style.display = "none";
-        document.getElementById('geometry_controls').style.display = "none";
-        document.getElementById('shape_controls').style.display = "none";
-        document.getElementById('images_controls').style.display = "none";
-        document.getElementById('img_controls').style.display = "none";
-    }
-    if (fileLoaded && displayEditControls.getAttribute("data-mode") === "edit_shape") {
-        document.getElementById('sidemenu').style.display = "flex";
-        document.getElementById('layer_stack').style.display = "flex";
-        document.getElementById('writer_controls').style.display = "none";
-        document.getElementById('editor_controls').style.display = "none";
-        document.getElementById('drawer_controls').style.display = "none";
-        document.getElementById('pencil_controls').style.display = "none";
-        document.getElementById('geometry_controls').style.display = "flex";
-        document.getElementById('shape_controls').style.display = "flex";
-        document.getElementById('images_controls').style.display = "none";
-        document.getElementById('img_controls').style.display = "none";
-    }
-    if (fileLoaded && displayEditControls.getAttribute("data-mode") === "edit_image") {
-        document.getElementById('sidemenu').style.display = "flex";
-        document.getElementById('layer_stack').style.display = "flex";
-        document.getElementById('writer_controls').style.display = "none";
-        document.getElementById('editor_controls').style.display = "none";
-        document.getElementById('drawer_controls').style.display = "none";
-        document.getElementById('pencil_controls').style.display = "none";
-        document.getElementById('geometry_controls').style.display = "none";
-        document.getElementById('shape_controls').style.display = "none";
-        document.getElementById('images_controls').style.display = "flex";
-        document.getElementById('img_controls').style.display = "flex";
-    }
-    if (fileLoaded) {
-        if (onetimeSetup) {
-            onetimeSetup = false;
-            sidemenuVisible = true;
-            layersVisible = true;
-            boxApplyMode = true;
-            layerApplyMode = false;
-            document.getElementById('show_btns').style.display = "none";
-            initLayerVariables();
-            initTextEditorControls();
-            restrictInputValues('lineheight_input', 1, 200, false, false);
-            restrictInputValues('textsize_input', 3, 400, false, false);
-            restrictInputValues('textrotation_input', -360, 360, true, false);
-            initDrawerEditorControls();
-            restrictInputValues('scale_width_draw', 0.1, 20.0, false, true);
-            restrictInputValues('scale_height_draw', 0.1, 20.0, false, true);
-            restrictInputValues('drawrotation_input', -360, 360, true, false);
-            initGeometryEditorControls();
-            restrictInputValues('scale_width', 1, 3000, true, false);
-            restrictInputValues('scale_height', 1, 3000, true, false);
-            restrictInputValues('xp2', 1, 3000, true, false);
-            restrictInputValues('yp2', 1, 3000, true, false);
-            restrictInputValues('shaperotation_input', -360, 360, true, false);
-            initImagesEditorControls();
-            restrictInputValues('scale_width_img', 1, 3000, true, false);
-            restrictInputValues('scale_height_img', 1, 3000, true, false);
-            restrictInputValues('imgrotation_input', -360, 360, true, false); 
+    if (!encrypted && editorMode) {
+        if (fileLoaded && displayEditControls.getAttribute("data-mode") === "edit_text") {
+            document.getElementById('sidemenu').style.display = "flex";
+            document.getElementById('layer_stack').style.display = "flex";
+            document.getElementById('writer_controls').style.display = "flex";
+            document.getElementById('editor_controls').style.display = "flex";
+            document.getElementById('drawer_controls').style.display = "none";
+            document.getElementById('pencil_controls').style.display = "none";
+            document.getElementById('geometry_controls').style.display = "none";
+            document.getElementById('shape_controls').style.display = "none";
+            document.getElementById('images_controls').style.display = "none";
+            document.getElementById('img_controls').style.display = "none";  
+            
+        }
+        if (fileLoaded && displayEditControls.getAttribute("data-mode") === "edit_draw") {
+            document.getElementById('sidemenu').style.display = "flex";
+            document.getElementById('layer_stack').style.display = "flex";
+            document.getElementById('drawer_controls').style.display = "flex";
+            document.getElementById('pencil_controls').style.display = "flex";
+            document.getElementById('writer_controls').style.display = "none";
+            document.getElementById('editor_controls').style.display = "none";
+            document.getElementById('geometry_controls').style.display = "none";
+            document.getElementById('shape_controls').style.display = "none";
+            document.getElementById('images_controls').style.display = "none";
+            document.getElementById('img_controls').style.display = "none";
+        }
+        if (fileLoaded && displayEditControls.getAttribute("data-mode") === "edit_shape") {
+            document.getElementById('sidemenu').style.display = "flex";
+            document.getElementById('layer_stack').style.display = "flex";
+            document.getElementById('writer_controls').style.display = "none";
+            document.getElementById('editor_controls').style.display = "none";
+            document.getElementById('drawer_controls').style.display = "none";
+            document.getElementById('pencil_controls').style.display = "none";
+            document.getElementById('geometry_controls').style.display = "flex";
+            document.getElementById('shape_controls').style.display = "flex";
+            document.getElementById('images_controls').style.display = "none";
+            document.getElementById('img_controls').style.display = "none";
+        }
+        if (fileLoaded && displayEditControls.getAttribute("data-mode") === "edit_image") {
+            document.getElementById('sidemenu').style.display = "flex";
+            document.getElementById('layer_stack').style.display = "flex";
+            document.getElementById('writer_controls').style.display = "none";
+            document.getElementById('editor_controls').style.display = "none";
+            document.getElementById('drawer_controls').style.display = "none";
+            document.getElementById('pencil_controls').style.display = "none";
+            document.getElementById('geometry_controls').style.display = "none";
+            document.getElementById('shape_controls').style.display = "none";
+            document.getElementById('images_controls').style.display = "flex";
+            document.getElementById('img_controls').style.display = "flex";
+        }
+        if (fileLoaded) {
+            if (onetimeSetup) {
+                onetimeSetup = false;
+                sidemenuVisible = true;
+                layersVisible = true;
+                boxApplyMode = true;
+                layerApplyMode = false;
+                document.getElementById('show_btns').style.display = "none";
+                initLayerVariables();
+                initTextEditorControls();
+                restrictInputValues('lineheight_input', 1, 200, false, false);
+                restrictInputValues('textsize_input', 3, 400, false, false);
+                restrictInputValues('textrotation_input', -360, 360, true, false);
+                initDrawerEditorControls();
+                restrictInputValues('scale_width_draw', 0.1, 20.0, false, true);
+                restrictInputValues('scale_height_draw', 0.1, 20.0, false, true);
+                restrictInputValues('drawrotation_input', -360, 360, true, false);
+                initGeometryEditorControls();
+                restrictInputValues('scale_width', 1, 3000, true, false);
+                restrictInputValues('scale_height', 1, 3000, true, false);
+                restrictInputValues('xp2', 1, 3000, true, false);
+                restrictInputValues('yp2', 1, 3000, true, false);
+                restrictInputValues('shaperotation_input', -360, 360, true, false);
+                initImagesEditorControls();
+                restrictInputValues('scale_width_img', 1, 3000, true, false);
+                restrictInputValues('scale_height_img', 1, 3000, true, false);
+                restrictInputValues('imgrotation_input', -360, 360, true, false); 
+                updateCursorX();
+                updateCursorY();
+            }
         }
     }
 }
