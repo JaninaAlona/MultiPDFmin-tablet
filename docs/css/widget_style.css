@@ -7,6 +7,21 @@
     z-index: 5;
 }
 
+.error_widget_con {
+  display: flex;
+  justify-content: center;
+}
+
+.error_widget {
+  display: none;
+  z-index: 10;
+  background-color: #dabdb6;
+  padding: 20px;
+  position: relative;
+  top: 78px;
+  width: 500px;
+}
+
 .pop_up legend {
     font-size: 18px;
 }
