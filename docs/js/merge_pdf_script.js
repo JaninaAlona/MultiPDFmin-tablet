@@ -64,7 +64,7 @@ const merger = Vue.createApp({
                         }, false);
                         list.appendChild(node);
                         slist(list);
-                        if ((selectedPDFBytes.length >= 1) && (selectedPDFBytes.length <= 100)) {
+                        if ((selectedPDFBytes.length > 1) && (selectedPDFBytes.length <= 100)) {
                             document.getElementById('save_merge').disabled = false;
                             document.getElementById('remove').disabled = false;
                             document.getElementById("save_merge").classList.add("enable_filename");
