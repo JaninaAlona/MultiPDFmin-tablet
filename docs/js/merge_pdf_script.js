@@ -11,39 +11,68 @@ const merger = Vue.createApp({
     data() {
         return {
             mergeFilename: '',
-            filename: ''
+            filename: '',
+            isEncrypted: false
         }
     },
 
     methods: {
         selectFile(e) {
-            file = e.target.files[0];
+            let encryptedErrorWidgets = document.getElementsByClassName("encrypted_error");
+            for (let i = 0; i < encryptedErrorWidgets.length; i++) {
+                encryptedErrorWidgets[i].style.display = "none";
+            }
+            let noPDFErrorWidgets = document.getElementsByClassName("no_pdf_error");
+            for (let i = 0; i < noPDFErrorWidgets.length; i++) {
+                noPDFErrorWidgets[i].style.display = "none";
+            }
+            const file = e.target.files[0];
             const fileReader = new FileReader();
-            fileReader.onload = function() {
+            fileReader.onload = async function() {
                 let selectedPDFByte = new Uint8Array(this.result);
-                selectedPDFBytes.push(selectedPDFByte);
+                this.isEncrypted = false;
+                if (file.name.endsWith(".pdf")) {
+                    let srcPDFDoc;
+                    try {
+                        srcPDFDoc = await PDFDocument.load(selectedPDFByte);
+                    } catch(encryptedErr) {
+                        this.isEncrypted = true;
+                        encryptedErrorWidgets = document.getElementsByClassName("encrypted_error");
+                        for (let i = 0; i < encryptedErrorWidgets.length; i++) {
+                            encryptedErrorWidgets[i].style.display = "flex";
+                        }
+                    }
+                    if (!this.isEncrypted) {
+                        selectedPDFBytes.push(selectedPDFByte);
+                        let list = document.getElementById("sortlist");
+                        let node = document.createElement("li");
+                        node.style.backgroundColor = "rgba(255, 255, 255, 1.0)";
+                        node.classList.add("fileselector");
+                        node.classList.add("file_unselected");
+                        node.innerText = file.name;
+                        node.addEventListener("click", function() {
+                            markFile(node);
+                        }, false);
+                        list.appendChild(node);
+                        slist(list);
+                        if ((selectedPDFBytes.length >= 1) && (selectedPDFBytes.length <= 100)) {
+                            document.getElementById('save_merge').disabled = false;
+                            document.getElementById('remove').disabled = false;
+                            document.getElementById("save_merge").classList.add("enable_filename");
+                            this.mergeFilename = "merged_pdf";
+                            document.getElementById("merge_filename").value = this.mergeFilename;
+                        }
+                    }
+                } else {
+                    selectedPDFByte = null;
+                    noPDFErrorWidgets = document.getElementsByClassName("no_pdf_error");
+                    for (let i = 0; i < noPDFErrorWidgets.length; i++) {
+                        noPDFErrorWidgets[i].style.display = "flex";
+                    }
+                }
             }
             if (file) 
                 fileReader.readAsArrayBuffer(file);
-            let list = document.getElementById("sortlist");
-            let node = document.createElement("li");
-            node.style.backgroundColor = "rgba(255, 255, 255, 1.0)";
-            node.classList.add("fileselector");
-            node.classList.add("file_unselected");
-            node.innerText = file.name;
-            node.addEventListener("click", function() {
-                markFile(node);
-            }, false);
-            list.appendChild(node);
-            slist(list);
-
-            if ((selectedPDFBytes.length >= 1) && (selectedPDFBytes.length <= 100)) {
-                document.getElementById('save_merge').disabled = false;
-                document.getElementById('remove').disabled = false;
-                document.getElementById("save_merge").classList.add("enable_filename");
-                this.mergeFilename = "merged_pdf";
-                document.getElementById("merge_filename").value = this.mergeFilename;
-            }
         },
 
         removeFile() {
