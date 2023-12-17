@@ -15,7 +15,16 @@ const merger = Vue.createApp({
             isEncrypted: false
         }
     },
-
+    mounted() {
+		let encryptedErrorWidgets = document.getElementsByClassName("encrypted_error");
+        for (let i = 0; i < encryptedErrorWidgets.length; i++) {
+            encryptedErrorWidgets[i].style.display = "none";
+        }
+        let noPDFErrorWidgets = document.getElementsByClassName("no_pdf_error");
+        for (let i = 0; i < noPDFErrorWidgets.length; i++) {
+            noPDFErrorWidgets[i].style.display = "none";
+        }
+	},
     methods: {
         selectFile(e) {
             let encryptedErrorWidgets = document.getElementsByClassName("encrypted_error");
