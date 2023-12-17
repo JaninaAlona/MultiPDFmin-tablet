@@ -194,7 +194,7 @@ function moveLayer(target) {
     let current;
     let layername;
     for (const i of items) {
-        i.draggable = true;
+        // i.draggable = true;
         i.ondragstart = e => {
             resetAllModes();
             current = i;
