@@ -194,17 +194,17 @@ function moveLayer(target) {
     let current;
     let layername;
     for (const i of items) {
-        // i.draggable = true;
-        i.ontouchstart = e => {
+        i.draggable = true;
+        i.ondragstart = e => {
             resetAllModes();
             current = i;
             layername = current.children[1];
             markSingleLayer(layername);
         };
-        i.ontouchmove = e => {
+        i.ondragover = e => {
             e.preventDefault();
         };
-        i.ontouchend = e => {
+        i.ondrop = e => {
             e.preventDefault();
             if (i != current) {
                 let currentpos = 0, droppedpos = 0;
