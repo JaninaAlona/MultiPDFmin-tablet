@@ -346,6 +346,21 @@ function adjustPDFToUserViewport(pdfDoc) {
 }
 
 
+function debounce(func, delay) { 
+    let inDebounce; 
+    return function () { 
+        const context = this; 
+        const args = arguments; 
+        clearTimeout(inDebounce); 
+        inDebounce = setTimeout(() => func.apply(context, args), delay); 
+    }; 
+} 
+   
+const debouncedZoomIn = debounce(zoomIn, 300); 
+const debouncedZoomOut = debounce(zoomOut, 300);
+const debouncedEnterZoomFactor = debounce(enterZoomFactor, 300);
+  
+
 async function zoomIn(e) {
     resetAllModes();
     if (renderCompleted) {
@@ -589,9 +604,9 @@ for (let i = 0; i < scrollwrappers.length; i++) {
     scrollwrappers[i].onscroll = displayPageNum;
 }
 
-document.getElementById('zoom_in').addEventListener('click', zoomIn, false);
-document.getElementById('zoom_factor').addEventListener('keypress', enterZoomFactor, false);
-document.getElementById('zoom_out').addEventListener('click', zoomOut, false);
+document.getElementById('zoom_in').addEventListener('click', debouncedZoomIn, false);
+document.getElementById('zoom_factor').addEventListener('keypress', debouncedEnterZoomFactor, false);
+document.getElementById('zoom_out').addEventListener('click', debouncedZoomOut, false);
 
 
 document.getElementById("dragpdf").addEventListener("click", function() {
